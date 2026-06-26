@@ -1,3 +1,3 @@
-# ojisan-rpg
+# おじさんクエスト（ojisan-quest）
 
-おじさんユニバースの新作。詳細は docs/GAME_DESIGN.md と ~/Developer/games/_starter-kit/ を参照。
+ドラクエ風ターン制RPGのパロディ（おじさんユニバース）。詳細は docs/GAME_DESIGN.md と ~/Developer/games/_starter-kit/。
