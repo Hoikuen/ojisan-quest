@@ -33,7 +33,8 @@ export class TitleScene extends Phaser.Scene {
       fontFamily: 'monospace', fontSize: '15px', color: COLORS.textDim,
     }).setOrigin(0.5);
 
-    const go = () => { startRun(); this.scene.start('BattleScene'); };
+    // はじめる → ラン開始 → 導入カットシーン → 戦闘
+    const go = () => { startRun(); this.scene.start('DialogueScene', { key: 'intro', next: 'BattleScene' }); };
     start.on('pointerdown', go);
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);
