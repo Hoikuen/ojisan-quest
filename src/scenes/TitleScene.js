@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
+import { startRun } from '../state/run.js';
 
-// タイトル：王道RPGの「はじめる」だけ。Enter/Space/クリックで戦闘へ。
+// タイトル：王道RPGの「はじめる」だけ。Enter/Space/クリックでランを開始して戦闘へ。
 export class TitleScene extends Phaser.Scene {
   constructor() { super('TitleScene'); }
 
@@ -27,7 +28,7 @@ export class TitleScene extends Phaser.Scene {
       fontFamily: 'monospace', fontSize: '15px', color: COLORS.textDim,
     }).setOrigin(0.5);
 
-    const go = () => this.scene.start('BattleScene');
+    const go = () => { startRun(); this.scene.start('BattleScene'); };
     start.on('pointerdown', go);
     this.input.keyboard.once('keydown-ENTER', go);
     this.input.keyboard.once('keydown-SPACE', go);

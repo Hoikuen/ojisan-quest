@@ -6,6 +6,55 @@
 
 ---
 
+## 🔄 引き継ぎ（2026-06-27・その2：フロア脱出ラン＋発注準備）
+
+### 今セッションでやったこと
+- **発注パッケージ追加**：`docs/ART_ORDERS.md`。attackポーズ／バトル背景／UIセットのASSET_LIST＋コピペ用発注プロンプト（キャラ同一性・配色・寸法を既存実装に整合）。生成素材は本人OK後に組込（AGENTS.md）。コミット `4237f15`。
+- **「1戦闘→タイトル」を「B1フロアの脱出ラン」に拡張**（既存アセットのみ・新規発注ゼロ）：
+  - 連戦 `caterpillar → caterpillar → fruitGirl → buddhaPig(ボス)` を順に戦う。HP/MP・レベル・経験値・お金・持ち物が戦闘をまたいで継続。
+  - **EXP/レベルアップを実際に反映**（従来はメッセージだけ）。レベルアップでステータス更新＋HP/MP全回復、Lv3で `heavySwing`（本気の一振り）習得。
+  - ボス（最後の敵）撃破→**脱出エンディング**、力尽き→**ゲームオーバー**。どちらも新規 `ResultScene` 経由でタイトルへ。
+  - 戦闘画面に**フロア進捗HUD**（左上「地下倉庫フロア / 魔物 n/4」）。
+- **薄い状態モジュール `src/state/run.js` を新設**：ラン状態（player参照・queue・index）と `grantExp/grantGold` を集約。エンジンは薄く・内容はデータ（RESKIN）を維持。
+- 敵 `buddhaPig`（大仏豚ぶちょう・`isBoss`）と `LEVEL_TABLE` / `FLOOR_RUN` / `heavySwing` を `content.js` に追加。`fruitGirl` のHPを30→34に微調整。
+- `vite.config.js`：dev/previewの `server.port` を `process.env.PORT || 5173` に（プレビューツールが別ポートを割り当てても起動できるように。ローカル既定は5173のまま）。
+
+### 検証（実起動パスで確認・MISTAKES準拠）
+- `npm run build` 通過（15 modules）。プレビュー起動→**コンソールエラーなし**。
+- 実起動パスを手動ステップで駆動して全行程を確認（rAFがhiddenで止まるため `game.step()` でループ自体を回す＝ojioji教訓どおり create() を迂回しない）：
+  - Title→Enter→ラン開始、`battle.player === run.player`（参照共有＝HP/MP継続の要）を確認。
+  - 連戦遷移：勝利→`grantExp`/`grantGold`→`advance()`→`scene.restart()`→次の敵。exp/goldが累積継続。
+  - レベルアップ発火：Lv2（38/38に全回復）→Lv3（`heavySwing`習得）→Lv4。
+  - ボス撃破→`ResultScene`「定時退社！」＋最終ステータス（Lv4 / 57/57 / 80G）表示。
+  - スクショで戦闘UI（フロアHUD・敵HP・ステータス窓・コマンド）を目視確認（崩れなし）。
+- ※注意：`win()` 内の `advance()` は同期実行だが**画面のrestartはメッセージ送り完了後**。なので「index は次に進んでいるが画面はまだ撃破した敵を表示」という瞬間がある（仕様どおり・バグではない）。
+- **未検証＝敗北→ResultScene('lose')の実走**（勝ち筋と対称・低リスク）と**バランス**。→ 本人の実機プレイが本番。
+
+### 既知の問題・未解決
+- attackポーズ未発注（idle前進トゥイーンで代用）／UI・背景はGraphicsプレースホルダのまま → `docs/ART_ORDERS.md` で発注準備済み。
+- ボスに専用の被弾/撃破コマは未使用（フェード撃破）。`enemyBossHurt` はロード済みだが敗北演出と同様、現状未使用。
+- バランス未調整（敵HP/atk・EXP曲線・レベル増分）。実機プレイ後に `content.js`/`LEVEL_TABLE` で調整。
+- 床ライン y=430 と足元 y=360 の浮きは未対応（背景画像差替時にまとめて調整）。
+
+### 次にやること
+1. **本人の実機プレイ**で通し（Title→4連戦→脱出 / 途中で敗北）を確認し、バランス/テンポを調整。
+2. 画像が用意できたら `ART_ORDERS.md` の手順で抽出→差替（背景→attack→UIの順が手応え大）。
+3. フロアを増やす：`FLOOR_RUN` を複数フロア化 or `ENCOUNTERS` 抽選に発展。仲間追加はparty配列化で。
+4. （任意）拠点＝喫茶店でのセーブ/補給。
+
+### 主に触るファイル（更新）
+- `src/state/run.js` … ラン状態＋レベリング（**新規・継続の本体**）
+- `src/scenes/BattleScene.js` … 戦闘＋連戦遷移＋勝敗演出
+- `src/scenes/ResultScene.js` … 脱出/敗北の結末（**新規**）
+- `src/data/content.js` … 敵/とくぎ/LEVEL_TABLE/FLOOR_RUN（全データ）
+- `docs/ART_ORDERS.md` … 発注パッケージ（**新規**）
+
+### git運用メモ
+- 上記コードは**未コミット**（`docs/ART_ORDERS.md` の `4237f15` までがコミット済み）。本人の実機プレイ確認後にまとめてコミット予定。
+- `.claude/launch.json` に `autoPort:true` を追加（非追跡なので影響なし）。`vite.config.js` のPORT対応は追跡対象＝要コミット。
+
+---
+
 ## 🔄 引き継ぎ（2026-06-27）
 
 ### 今セッションでやったこと

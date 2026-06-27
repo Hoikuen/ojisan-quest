@@ -9,7 +9,8 @@ export const PLAYER = {
   sprite: 'playerIdle',
   hurtSprite: 'playerHurt',
   level: 1,
-  exp: 0,
+  exp: 0,    // 累積経験値（LEVEL_TABLE.expToReach と比較してレベルアップ）
+  gold: 0,
   hp: 30, maxHp: 30,
   mp: 8, maxMp: 8,
   atk: 8,
@@ -18,12 +19,26 @@ export const PLAYER = {
   skills: ['shout', 'coffee'], // 習得済みとくぎ（SKILLS のキー）
 };
 
+// ── レベル設計（成長）──────────────────────────────────────────
+// level1 は PLAYER の開始値と一致させる。expToReach＝そのレベルに上がる累積EXPしきい値。
+// レベルアップ時はステータスをこの行の値に更新し、HP/MPは全回復（王道）。learn があればとくぎ習得。
+export const LEVEL_TABLE = [
+  { level: 1, expToReach: 0,  maxHp: 30, maxMp: 8,  atk: 8,  def: 5,  spd: 6 },
+  { level: 2, expToReach: 8,  maxHp: 38, maxMp: 10, atk: 10, def: 6,  spd: 7 },
+  { level: 3, expToReach: 22, maxHp: 47, maxMp: 13, atk: 12, def: 7,  spd: 8, learn: 'heavySwing' },
+  { level: 4, expToReach: 44, maxHp: 57, maxMp: 16, atk: 15, def: 9,  spd: 9 },
+  { level: 5, expToReach: 76, maxHp: 70, maxMp: 20, atk: 18, def: 11, spd: 10 },
+];
+
 // ── とくぎ（kind＋params。エンジンは kind を見て分岐）────────────
 export const SKILLS = {
   shout:   { name: '気合いの一喝', kind: 'attack', power: 1.8, cost: 4, target: 'enemy',
              msg: '{user}は 腹の底から 一喝した！' },
   coffee:  { name: '一服する',     kind: 'heal',   amount: 16, cost: 3, target: 'self',
              msg: '{user}は 缶コーヒーで 一服した。' },
+  // Lv3 で習得（LEVEL_TABLE.learn）。強力な単発攻撃。
+  heavySwing: { name: '本気の一振り', kind: 'attack', power: 2.4, cost: 6, target: 'enemy',
+                msg: '{user}は 本気で 振りかぶった！' },
 };
 
 // ── どうぐ（持ち物。count はランタイムで消費）────────────────────
@@ -50,18 +65,34 @@ export const RPG_ENEMIES = {
     name: '果物メガネ女子',
     sprite: 'enemyFruitIdle',
     hurtSprite: 'enemyFruitHurt',
-    hp: 30, atk: 9, def: 4, spd: 7, exp: 14, gold: 12,
+    hp: 34, atk: 9, def: 4, spd: 7, exp: 14, gold: 12,
     flavorAppear: '果物メガネ女子が 立ちふさがった！',
     actions: [
       { name: 'いちご投げ', kind: 'attack', power: 1.2, msg: '果物メガネ女子の いちご投げ！' },
     ],
   },
+  buddhaPig: {
+    name: '大仏豚ぶちょう',
+    sprite: 'enemyBossIdle',
+    hurtSprite: 'enemyBossHurt',
+    isBoss: true,
+    hp: 80, atk: 13, def: 8, spd: 5, exp: 30, gold: 60,
+    flavorAppear: 'このフロアの主——大仏豚ぶちょうが 立ちはだかった！',
+    actions: [
+      { name: 'おやつ投げ', kind: 'attack', power: 1.0, msg: '大仏豚ぶちょうは おやつを 投げつけた！' },
+      { name: '残業の圧',   kind: 'attack', power: 1.6, msg: '大仏豚ぶちょうは 残業の圧を かけてきた！' },
+    ],
+  },
 };
 
-// ── エンカウント（エリア→敵編成。最小ループは1体固定）──────────
+// ── エンカウント（エリア→敵編成。今は固定順の連戦に使う）────────
 export const ENCOUNTERS = {
   floorB1: { enemies: ['caterpillar'], rate: 1.0 },
 };
 
-// 最小ループで最初に出す戦闘（後で ENCOUNTERS から抽選に変える）
-export const FIRST_BATTLE = { enemy: 'caterpillar' };
+// ── フロアの脱出ラン（縦スライス：連戦→ボス→脱出）─────────────
+// queue を先頭から順に戦う。HP/MP・レベル・持ち物は run.js が戦闘をまたいで保持する。
+export const FLOOR_RUN = {
+  name: '地下倉庫フロア',
+  enemies: ['caterpillar', 'caterpillar', 'fruitGirl', 'buddhaPig'],
+};

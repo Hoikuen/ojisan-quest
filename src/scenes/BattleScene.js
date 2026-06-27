@@ -1,26 +1,38 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS, LAYOUT } from '../constants.js';
-import { PLAYER, RPG_ENEMIES, SKILLS, ITEMS, FIRST_BATTLE } from '../data/content.js';
+import { RPG_ENEMIES, SKILLS } from '../data/content.js';
+import {
+  getRun, startRun, currentEnemyKey, isLastEnemy, advance,
+  progressText, grantExp, grantGold,
+} from '../state/run.js';
 
 // ───────────────────────────────────────────────────────────────
-// 最小ループ：主人公おじさん1人 vs 敵1体の「1戦闘が回る」ターン制バトル。
+// フロアの脱出ラン：主人公おじさん1人 vs 敵1体のターン制バトルを連戦する。
 // 行動順は素早さ順（ATBなし）。コマンド：たたかう／とくぎ／どうぐ／にげる。
+// HP/MP・レベル・持ち物は run.js が戦闘をまたいで保持（毎戦 scene.restart）。
+// 勝てば次の敵へ／最後の敵（ボス）を倒せば脱出、力尽きたら敗北（→ ResultScene）。
 // UI・背景はプレースホルダ（Graphics描画）。後で発注した画像に差し替える。
 // ───────────────────────────────────────────────────────────────
 export class BattleScene extends Phaser.Scene {
   constructor() { super('BattleScene'); }
 
   create() {
-    // 戦闘状態（モジュール定義を破壊しないようクローン）
-    this.player = { ...PLAYER, inventory: structuredClone(ITEMS) };
-    const enemyDef = RPG_ENEMIES[FIRST_BATTLE.enemy];
-    this.enemy = { ...enemyDef, maxHp: enemyDef.hp };
+    // ランから状態を取得（直接起動時の保険として無ければ開始）。
+    let run = getRun();
+    if (!run) run = startRun();
+    this.run = run;
+    this.player = run.player; // 参照：ランをまたいで継続する同一オブジェクト
+
+    // 敵はモジュール定義を破壊しないようクローン（hp を減らすため）。
+    const enemyDef = RPG_ENEMIES[currentEnemyKey()];
+    this.enemy = { ...structuredClone(enemyDef), maxHp: enemyDef.hp };
 
     this.battleOver = false;
     this.busy = true; // 演出中フラグ（入力ロック）
 
     this.buildBackground();
     this.buildSprites();
+    this.buildFloorHud();
     this.buildPlayerStatusWindow();
     this.buildEnemyHud();
     this.buildMessageWindow();
@@ -42,6 +54,16 @@ export class BattleScene extends Phaser.Scene {
     g.fillRect(0, 0, GAME_W, GAME_H);
     // 床ライン
     g.fillStyle(0x000000, 0.25).fillRect(0, 430, GAME_W, GAME_H - 430);
+  }
+
+  // フロア名＋進捗（魔物 n/総数）を左上に小さく出す。
+  buildFloorHud() {
+    this.add.text(16, 12, this.run.floorName, {
+      fontFamily: 'sans-serif', fontSize: '14px', color: COLORS.textDim,
+    });
+    this.add.text(16, 30, `魔物  ${progressText()}`, {
+      fontFamily: 'monospace', fontSize: '13px', color: COLORS.textDim,
+    });
   }
 
   buildSprites() {
@@ -418,11 +440,36 @@ export class BattleScene extends Phaser.Scene {
     } else {
       this.tweens.add({ targets: this.enemySprite, alpha: 0, angle: 20, duration: 600 });
     }
-    this.runSequence([
+
+    // 報酬＋レベルアップ（実際にステータスへ反映＝成長が継続する）。
+    const last = isLastEnemy();
+    grantGold(this.player, this.enemy.gold);
+    const levelUps = grantExp(this.player, this.enemy.exp);
+
+    const steps = [
       { text: `${this.enemy.name}を たおした！`, delay: 1100 },
       { text: `けいけんち ${this.enemy.exp} と ${this.enemy.gold}G を てにいれた！`, delay: 1300 },
-      { text: 'おじさんは すこし 出口に 近づいた気がした。', delay: 1400 },
-    ], () => this.endBattle());
+    ];
+    for (const up of levelUps) {
+      steps.push({
+        text: `${this.player.name}は レベル ${up.level} に あがった！`, delay: 1300,
+        fn: () => this.refreshPlayerStatus(),
+      });
+      if (up.learned) {
+        steps.push({ text: `とくぎ「${SKILLS[up.learned].name}」を おぼえた！`, delay: 1300 });
+      }
+    }
+
+    if (last) {
+      // 最後の敵（ボス）撃破 → 脱出エンディングへ。
+      steps.push({ text: 'ビルの出口に 光が さしこんだ——', delay: 1500 });
+      this.runSequence(steps, () => this.endBattle('win'));
+    } else {
+      // まだ魔物が残る → 次の戦闘へ（HP/MP・持ち物は維持して restart）。
+      advance();
+      steps.push({ text: 'だが まだ 魔物の気配がする……', delay: 1300 });
+      this.runSequence(steps, () => this.nextBattle());
+    }
   }
 
   lose() {
@@ -437,12 +484,19 @@ export class BattleScene extends Phaser.Scene {
     this.runSequence([
       { text: `${this.player.name}は ちからつきた…`, delay: 1300 },
       { text: '今夜も 定時には 帰れなかった……', delay: 1600 },
-    ], () => this.endBattle());
+    ], () => this.endBattle('lose'));
   }
 
-  endBattle() {
+  // 次の敵へ：フェードして同シーンを restart（run.index が進んでいるので別の敵が出る）。
+  nextBattle() {
+    this.cameras.main.fadeOut(400);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.restart());
+  }
+
+  endBattle(outcome) {
     this.cameras.main.fadeOut(500);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('TitleScene'));
+    this.cameras.main.once('camerafadeoutcomplete',
+      () => this.scene.start('ResultScene', { outcome }));
   }
 
   // ── メッセージ送り（オート進行）────────────────────────────

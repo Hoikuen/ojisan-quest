@@ -3,6 +3,7 @@ import { GAME_W, GAME_H } from './constants.js';
 import { BootScene } from './scenes/BootScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
 import { BattleScene } from './scenes/BattleScene.js';
+import { ResultScene } from './scenes/ResultScene.js';
 
 // ターン制RPG＝物理エンジン不要（正面ビュー・静止スプライト・トゥイーン演出のみ）。
 const config = {
@@ -19,7 +20,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, TitleScene, BattleScene],
+  scene: [BootScene, TitleScene, BattleScene, ResultScene],
 };
 
 const game = new Phaser.Game(config);
