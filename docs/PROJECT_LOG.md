@@ -7,6 +7,25 @@
 
 ---
 
+## 🔄 引き継ぎ（2026-06-27・その6：GitHub Pages 公開）
+
+### このセッションでやったこと
+- **GitHub Pages 公開**：`https://hoikuen.github.io/ojisan-quest/` でゲームが公開 URL で遊べるようになった。
+  - `.github/workflows/deploy.yml` を追加（GitHub Actions で `npm run build` → Pages デプロイ）。
+  - `gh repo create hoikuen/ojisan-quest --public` でリポジトリ作成・push・Pages 有効化（`build_type: workflow`）を一括実行。
+  - Actions が 40 秒で完了、初回デプロイ成功を確認。
+  - コミット：`ff14ce9`（deploy.yml）。
+- **`vite.config.js` に `host: true`** を追加（LAN 内スマホアクセス用。dev サーバ限定）。
+
+### 補足・運用メモ
+- `main` に push するたびに Actions が自動ビルド＆デプロイ（手動操作不要）。
+- `vite.config.js` の `base` は `command === 'build'` 時のみ `/ojisan-quest/`。ローカル dev は `/` のまま（URL でアセット壊れない）。
+
+### 次にやること（変わらず Phase C）
+→ 前の引き継ぎ（その5）を参照。
+
+---
+
 ## 🔄 引き継ぎ（2026-06-27・その5：Phase B 完了＝全5階層が通しでクリア可能）
 
 ### このセッションでやったこと

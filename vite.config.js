@@ -7,7 +7,7 @@ import { defineConfig } from 'vite';
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/ojisan-quest/' : '/',
   // ローカルは 5173。プレビューツール等が PORT を指定したらそれに従う。
-  server: { port: Number(process.env.PORT) || 5173 },
+  server: { port: Number(process.env.PORT) || 5173, host: true },
   build: {
     assetsInlineLimit: 0,
     chunkSizeWarningLimit: 1500,
