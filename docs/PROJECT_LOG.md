@@ -7,6 +7,59 @@
 
 ---
 
+## 🔄 引き継ぎ（2026-06-27・その5：Phase B 完了＝全5階層が通しでクリア可能）
+
+### このセッションでやったこと
+- **全5階層を実装**（在庫アート12スプライト＋背景8枚を全採用）。**Title→B1→1F→中層→上層→屋上→社長戦→脱出END** が通る。
+  - FLOORS に `f1`（1F ロビー受付）・`office`（中層 オフィス）・`exec`（上層 役員）・`rooftop`（屋上 社長室）を追加。
+  - 屋上は **steps:0**＝入場即「ボスにいどむ」。`isBossReady()` が `0>=0` で true になり機能。
+- **新規敵を `content.js` に追加**：
+  - 1F：自販機の精(`vendingSpirit`)・終電ゾンビ(`lastTrainZombie`)・**受付の主(`receptionLord`＝課長ロボ sprite 流用)**。
+  - 中層：コピー機オバケ(`copierGhost`)・スマホ目玉(`phoneEye`)・名刺の群れ(`cardSwarm`)。
+  - 上層：残業の亡霊(`overtimeWraith`＝zombie流用)・監査の目(`auditEye`＝phone流用)＝役員フロア用に高ステ化。
+  - 屋上：**社長(`president`)** hp130/atk19。ラスボス。
+- **ボス格上げ**：`fruitGirl`→中層ボス(主任 hp90)、`buddhaPig`→上層ボス(部長 hp95)。`isBoss:true`付与。
+- **背景採用**：entrance_night/office_night/exec_floor/president_room/ending_escape/game_over（public/assets/backgrounds）。
+- **story.js**：`f1_intro`/`office_intro`/`exec_intro`/`rooftop_intro` を脚本(`STORY_SCRIPT.md`)から実装反映。
+- **ResultScene**：勝利=ending_escape／敗北=game_over の背景を配線（無ければ単色fallback）。
+- **死蔵コード削除**：`FLOOR_RUN`/`ENCOUNTERS`（FloorScene化で不要）。
+- コミット：`3907f30`（全5階層）。直前 `d73dead`（B1）・`bce1fda`（ログ）。作業ツリークリーン。
+
+### フロア×敵×ボス 一覧（実装値）
+| 階 | bg | 雑魚(重み) | ボス(hp) |
+|---|---|---|---|
+| B1 地下倉庫 | bgStorageB1 | caterpillar3, paperTower2 | rollingBagLord(50) |
+| 1F ロビー受付 | bgEntranceNight | vendingSpirit3, lastTrainZombie3 | receptionLord(70) |
+| 中層 オフィス | bgOfficeNight | copierGhost2, phoneEye2, cardSwarm2 (steps:4) | fruitGirl(90) |
+| 上層 役員 | bgExecFloor | overtimeWraith3, auditEye2 (steps:4) | buddhaPig(95) |
+| 屋上 社長室 | bgPresidentRoom | （直行・steps:0） | president(130) |
+
+### 検証（プレビュー目視・game.step手動駆動）
+- 全5フロアの背景・敵スプライト・HUD・コマンドメニュー・社長戦・脱出ENDをスクショ確認。**コンソールエラーなし**。
+- **検証手法メモ（重要）**：プレビューはhiddenタブで rAF 停止。`window.__game.step(now,dt)` を手で回す `__pump()` ヘルパで駆動した。
+  - **落とし穴**：`import('/src/state/run.js')` で取得したモジュールは**別インスタンス**（`state` が別物）。シーンが見ているバンドル run と一致しない＝`getRun()` が null で create() がクラッシュする。→ **バンドル run は「稼働中シーンの `this.run`」から取得する**（CafeScene 等を一度動かして `window.__brun = scene.run`）。これで `floorIndex` を書き換え各階へジャンプして検証した。
+
+### 既知の問題・未実装（Phase C 以降）
+- **2人パーティ未実装**（仲間 mate_kohai/ol/senpai は在庫のみ）。`BattleScene` は1アクター。→ Phase C。
+- **選択肢付き会話・3エンディング分岐 未実装**：現状ラスボス撃破は常に normal（脱出END=ending_escape）。true(帰る)/bad(全滅)分岐と社長第2形態(HP50%)は Phase E。`rooftop_confront`/`president_phase2`/`ending_*` 脚本は用意済み。
+- **小イベント/収集物 未実装**：got_photo/guitar/phone・後輩/OL合流。FLOORS に `events` を足す設計は GAME_PLAN にあり。
+- **ショップ未実装**（gold は貯まる）。Phase E。
+- バランス未調整（敵HP/atk・EXP曲線）。社長50expで一気にLv1→Lv4する等、**実機プレイでの調整が必要**。
+- gauge/guard 未配線（自前バー・ぼうぎょは後フェーズ）。敵の足が少し浮く（許容）。
+
+### 次にやること（順）
+1. **本人の実機プレイ**で通し（Title→全5階→社長→脱出 / 途中敗北）。バランス・テンポを体感して `content.js`/`LEVEL_TABLE` 調整。
+2. **Phase C**：2人パーティ（`run.party=[...]`・`BattleScene` 複数アクター対応・対象選択・全体/単体技）。仲間合流イベント（後輩=B1クリア後・OL=1Fクリア後）。
+3. **Phase D**：弱点/敵行動パターン。→ **Phase E**：収集物・社長選択肢・社長第2形態・3エンディング・ショップ。→ **Phase F**：バランス＋独立検証Go。
+
+### 主に触るファイル
+- `src/data/content.js`：敵/FLOORS/LEVEL_TABLE（データ追加の中心）。
+- `src/data/story.js`：会話。`src/data/assets.js`：キー→パス。
+- `src/scenes/`：FloorScene（フロア演出）/ BattleScene（Phase Cで複数アクター化）/ DialogueScene（Phase Eで choices 対応）。
+- `src/state/run.js`：Phase C で `party` 追加・収集/合流フラグ。
+
+---
+
 ## 🔄 引き継ぎ（2026-06-27・その4：Phase A+B 完了・B1フロアループ動作確認）
 
 ### このセッションでやったこと
