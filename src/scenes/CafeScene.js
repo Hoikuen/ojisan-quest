@@ -90,7 +90,7 @@ export class CafeScene extends Phaser.Scene {
   depart() {
     this._busy = true;
     this.cameras.main.fadeOut(300);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('BattleScene'));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('FloorScene'));
   }
 
   flash(text) {

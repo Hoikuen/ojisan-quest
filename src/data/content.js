@@ -83,7 +83,42 @@ export const RPG_ENEMIES = {
       { name: '残業の圧',   kind: 'attack', power: 1.6, msg: '大仏豚ぶちょうは 残業の圧を かけてきた！' },
     ],
   },
+  // B1 雑魚（新規アート）
+  paperTower: {
+    name: '書類タワー',
+    sprite: 'enemyPaperIdle',
+    hp: 22, atk: 7, def: 3, spd: 5, exp: 7, gold: 6,
+    flavorAppear: '書類タワーが ぐらりと 傾いた！　崩れる気だ！',
+    actions: [
+      { name: '書類なだれ', kind: 'attack', power: 1.1, msg: '書類タワーの 書類なだれ！' },
+    ],
+  },
+  // B1 階ボス（流用：転がるカバン）
+  rollingBagLord: {
+    name: '転がるカバンの主',
+    sprite: 'enemyRollingBagIdle',
+    isBoss: true,
+    hp: 50, atk: 10, def: 6, spd: 8, exp: 18, gold: 30,
+    flavorAppear: '転がるカバンの主が ゴロゴロと 道をふさいだ！',
+    actions: [
+      { name: '体当たり',   kind: 'attack', power: 1.2, msg: '転がるカバンの主が 突進してきた！' },
+      { name: '書類ばらまき', kind: 'attack', power: 0.9, msg: '転がるカバンの主が 書類を ばらまいた！' },
+    ],
+  },
 };
+
+// ── フロア定義（Phase B：軽量通路＋エンカウント抽選＋階ボス）────
+// steps＝その階で踏む通常エンカウント回数。踏み終えるとボス扉。
+// encounters＝重み付き抽選（w が重み）。boss＝階ボスの敵キー。
+export const FLOORS = [
+  {
+    id: 'b1', name: '地下倉庫', bg: 'bgStorageB1', steps: 3,
+    encounters: [{ enemy: 'caterpillar', w: 3 }, { enemy: 'paperTower', w: 2 }],
+    boss: 'rollingBagLord',
+    introStory: 'b1_intro',
+  },
+  // 1F / 中層 / 上層 / 屋上 は順次追加（在庫アートあり）。
+];
 
 // ── エンカウント（エリア→敵編成。今は固定順の連戦に使う）────────
 export const ENCOUNTERS = {

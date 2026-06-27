@@ -16,8 +16,13 @@ export const IMAGES = {
   playerVictory: `${S}/player/victory.png`,
   playerGuard: `${S}/player/guard.png`,
 
+  // ── 敵（B1：書類タワー[新規]／転がるカバンの主[流用]）──────────
+  enemyPaperIdle: `${S}/enemy_paper/idle.png`,
+  enemyRollingBagIdle: `${S}/enemy_rolling_bag/idle.png`,
+
   // ── 背景・NPC・UI（発注・採用済み。後でトータル差し替え予定）──
   battleOffice: `${BG}/battle_office.png`,
+  bgStorageB1: `${BG}/storage_b1.png`,
   bgCafe: `${BG}/cafe.png`,
   npcMama: `${S}/npc_mama/idle.png`,
   uiWindow: `${UI}/window.png`,
