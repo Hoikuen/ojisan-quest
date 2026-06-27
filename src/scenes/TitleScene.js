@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
-import { startRun } from '../state/run.js';
+import { startRun, hasSave, loadRun } from '../state/run.js';
 
 // タイトル：王道RPGの「はじめる」だけ。Enter/Space/クリックでランを開始して戦闘へ。
 export class TitleScene extends Phaser.Scene {
@@ -22,21 +22,37 @@ export class TitleScene extends Phaser.Scene {
       }).setOrigin(0.5);
     }
 
-    const start = this.add.text(GAME_W / 2, 400, '▶ はじめる', {
-      fontFamily: 'sans-serif', fontSize: '30px', color: '#ffffff',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    // はじめる → ラン開始 → 導入 → 拠点（喫茶のりちゃん）。つづきから → ロード → 拠点。
+    const newGame = () => { startRun(); this.scene.start('DialogueScene', { key: 'intro', next: 'CafeScene' }); };
+    const continueGame = () => { if (loadRun()) this.scene.start('CafeScene'); else newGame(); };
 
-    // 点滅でクリック可を示す
-    this.tweens.add({ targets: start, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
+    const opts = hasSave()
+      ? [{ label: '▶ つづきから', act: continueGame }, { label: 'はじめる（最初から）', act: newGame }]
+      : [{ label: '▶ はじめる', act: newGame }];
 
-    this.add.text(GAME_W / 2, GAME_H - 40, 'Enter / Space / クリック で開始', {
+    this.menuIdx = 0;
+    this.menuTexts = opts.map((o, i) => this.add.text(GAME_W / 2, 385 + i * 44, o.label, {
+      fontFamily: 'sans-serif', fontSize: i === 0 ? '28px' : '22px', color: '#ffffff',
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
+
+    const refresh = () => this.menuTexts.forEach((t, i) => t.setColor(i === this.menuIdx ? '#ffe24a' : '#ffffff'));
+    const setIdx = (i) => { this.menuIdx = i; refresh(); };
+    this.menuTexts.forEach((t, i) => {
+      t.on('pointerover', () => setIdx(i));
+      t.on('pointerdown', () => opts[this.menuIdx].act());
+    });
+    refresh();
+
+    const kb = this.input.keyboard;
+    if (opts.length > 1) {
+      kb.on('keydown-UP', () => setIdx((this.menuIdx + opts.length - 1) % opts.length));
+      kb.on('keydown-DOWN', () => setIdx((this.menuIdx + 1) % opts.length));
+    }
+    kb.on('keydown-ENTER', () => opts[this.menuIdx].act());
+    kb.on('keydown-SPACE', () => opts[this.menuIdx].act());
+
+    this.add.text(GAME_W / 2, GAME_H - 40, opts.length > 1 ? '↑↓ で選択・Enter で決定' : 'Enter / Space / クリック で開始', {
       fontFamily: 'monospace', fontSize: '15px', color: COLORS.textDim,
     }).setOrigin(0.5);
-
-    // はじめる → ラン開始 → 導入カットシーン → 戦闘
-    const go = () => { startRun(); this.scene.start('DialogueScene', { key: 'intro', next: 'BattleScene' }); };
-    start.on('pointerdown', go);
-    this.input.keyboard.once('keydown-ENTER', go);
-    this.input.keyboard.once('keydown-SPACE', go);
   }
 }

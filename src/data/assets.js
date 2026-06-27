@@ -16,8 +16,10 @@ export const IMAGES = {
   playerVictory: `${S}/player/victory.png`,
   playerGuard: `${S}/player/guard.png`,
 
-  // ── バトル背景・UI（発注・採用済み。後でトータル差し替え予定）──
+  // ── 背景・NPC・UI（発注・採用済み。後でトータル差し替え予定）──
   battleOffice: `${BG}/battle_office.png`,
+  bgCafe: `${BG}/cafe.png`,
+  npcMama: `${S}/npc_mama/idle.png`,
   uiWindow: `${UI}/window.png`,
   uiGauge: `${UI}/gauge.png`,
   uiCursor: `${UI}/cursor.png`,

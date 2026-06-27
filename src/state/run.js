@@ -5,6 +5,9 @@ import { PLAYER, ITEMS, LEVEL_TABLE, FLOOR_RUN } from '../data/content.js';
 
 let state = null;
 
+const SAVE_KEY = 'ojisanQuest.save';
+const SAVE_VERSION = 1; // run の形を変えたら上げる（旧セーブは破棄＝MVP方針）
+
 // 新しいランを開始（タイトルの「はじめる」で呼ぶ）。
 export function startRun() {
   state = {
@@ -12,11 +15,38 @@ export function startRun() {
     queue: [...FLOOR_RUN.enemies],
     index: 0,
     floorName: FLOOR_RUN.name,
+    flags: {}, // 進行/解放/収集/選択（cafeVisited 等）
   };
   return state;
 }
 
 export function getRun() { return state; }
+
+// ── セーブ/ロード（拠点チェックポイント・単一スロット・localStorage）──
+export function saveRun() {
+  if (!state) return false;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ saveVersion: SAVE_VERSION, state }));
+    return true;
+  } catch (e) { return false; }
+}
+
+export function hasSave() {
+  try {
+    const data = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    return !!(data && data.saveVersion === SAVE_VERSION && data.state);
+  } catch (e) { return false; }
+}
+
+export function loadRun() {
+  try {
+    const data = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    if (!data || data.saveVersion !== SAVE_VERSION || !data.state) return null;
+    state = data.state;
+    if (!state.flags) state.flags = {};
+    return state;
+  } catch (e) { return null; }
+}
 export function currentEnemyKey() { return state.queue[state.index]; }
 export function isLastEnemy() { return state.index >= state.queue.length - 1; }
 export function advance() { state.index += 1; }
