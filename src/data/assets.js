@@ -11,10 +11,21 @@ export const IMAGES = {
   playerIdle: `${S}/player/idle.png`,
   playerHurt: `${S}/player/hurt.png`,
   playerAttack: `${S}/player/attack.png`,
+  playerCast: `${S}/player/cast.png`,
+  playerDrink: `${S}/player/drink.png`,
+  playerVictory: `${S}/player/victory.png`,
+  playerGuard: `${S}/player/guard.png`,
 
   // ── バトル背景・UI（発注・採用済み。後でトータル差し替え予定）──
   battleOffice: `${BG}/battle_office.png`,
   uiWindow: `${UI}/window.png`,
+  uiGauge: `${UI}/gauge.png`,
+  uiCursor: `${UI}/cursor.png`,
+  iconAttack: `${UI}/icon_attack.png`,
+  iconSkill: `${UI}/icon_skill.png`,
+  iconItem: `${UI}/icon_item.png`,
+  iconFlee: `${UI}/icon_flee.png`,
+  logoTitle: `${UI}/logo_title.png`,
 
   // ── 敵：イモムシ社員（最小ループの最初の1体）────────────────
   enemyCaterpillarIdle: `${S}/enemy_caterpillar/idle.png`,

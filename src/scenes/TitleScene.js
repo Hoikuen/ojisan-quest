@@ -9,13 +9,18 @@ export class TitleScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#0b0b10');
 
-    this.add.text(GAME_W / 2, 180, 'おじさんクエスト', {
-      fontFamily: 'sans-serif', fontSize: '52px', color: '#ffe24a', fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(GAME_W / 2, 250, '〜 定時に帰れない呪い 〜', {
-      fontFamily: 'sans-serif', fontSize: '22px', color: COLORS.textDim,
-    }).setOrigin(0.5);
+    // 採用済みロゴ（タイトル＋サブタイトル一体）。無ければテキストにフォールバック。
+    if (this.textures.exists('logoTitle')) {
+      const logo = this.add.image(GAME_W / 2, 215, 'logoTitle').setOrigin(0.5);
+      logo.setScale(Math.min(1, 560 / logo.width));
+    } else {
+      this.add.text(GAME_W / 2, 180, 'おじさんクエスト', {
+        fontFamily: 'sans-serif', fontSize: '52px', color: '#ffe24a', fontStyle: 'bold',
+      }).setOrigin(0.5);
+      this.add.text(GAME_W / 2, 250, '〜 定時に帰れない呪い 〜', {
+        fontFamily: 'sans-serif', fontSize: '22px', color: COLORS.textDim,
+      }).setOrigin(0.5);
+    }
 
     const start = this.add.text(GAME_W / 2, 400, '▶ はじめる', {
       fontFamily: 'sans-serif', fontSize: '30px', color: '#ffffff',

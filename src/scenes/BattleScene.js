@@ -163,10 +163,13 @@ export class BattleScene extends Phaser.Scene {
     // メッセージ窓の右半分に重ねて出すコマンド枠（縦1列。左半分にはプロンプト文が出る）
     this.cmdX = 548; this.cmdY = 446; this.cmdW = 224; this.cmdH = 130;
     this.cmdBox = this.drawWindow(this.cmdX, this.cmdY, this.cmdW, this.cmdH).setVisible(false);
-    this.cmdItems = [];   // text objects
-    this.cmdCursor = this.add.text(0, 0, '▶', {
-      fontFamily: 'sans-serif', fontSize: '20px', color: '#ffe24a',
-    }).setVisible(false);
+    this.cmdItems = [];   // ラベルtext（カーソル/選択判定に使う）
+    this.cmdIcons = [];   // コマンドアイコン画像（掃除用）
+    this.cmdCursor = (this.textures.exists('uiCursor')
+      ? this.add.image(0, 0, 'uiCursor').setOrigin(0, 0.5).setDisplaySize(18, 18)
+      : this.add.text(0, 0, '▶', { fontFamily: 'sans-serif', fontSize: '20px', color: '#ffe24a' }).setOrigin(0, 0.5)
+    ).setVisible(false);
+    this.cmdCursorX = this.cmdX + 12;
     this.menuIndex = 0;
     this.menuOptions = [];
     this.menuActive = false;
@@ -180,14 +183,23 @@ export class BattleScene extends Phaser.Scene {
     this.menuActive = true;
     this.cmdBox.setVisible(true);
 
-    // 既存の項目テキストを作り直す
+    // 既存の項目（ラベル＋アイコン）を作り直す
     this.cmdItems.forEach((t) => t.destroy());
-    this.cmdItems = [];
+    this.cmdIcons.forEach((ic) => ic.destroy());
+    this.cmdItems = []; this.cmdIcons = [];
     const rowH = Math.min(28, (this.cmdH - 24) / options.length);
+    const hasIcons = options.some((o) => o.icon);
+    const iconX = this.cmdX + 30;
+    const labelX = hasIcons ? this.cmdX + 56 : this.cmdX + 34;
+    this.cmdCursorX = this.cmdX + (hasIcons ? 10 : 12);
     options.forEach((opt, i) => {
-      const tx = this.cmdX + 34;
       const ty = this.cmdY + 14 + i * rowH;
-      const t = this.add.text(tx, ty, opt.label, {
+      if (opt.icon && this.textures.exists(opt.icon)) {
+        const ic = this.add.image(iconX, ty + 9, opt.icon).setOrigin(0, 0.5).setDisplaySize(22, 22);
+        if (opt.enabled === false) ic.setAlpha(0.4);
+        this.cmdIcons.push(ic);
+      }
+      const t = this.add.text(labelX, ty, opt.label, {
         fontFamily: 'sans-serif', fontSize: '18px',
         color: opt.enabled === false ? '#666a80' : '#ffffff',
       });
@@ -210,7 +222,7 @@ export class BattleScene extends Phaser.Scene {
   updateCursor() {
     const t = this.cmdItems[this.menuIndex];
     if (!t) return;
-    this.cmdCursor.setPosition(t.x - 22, t.y).setVisible(true);
+    this.cmdCursor.setPosition(this.cmdCursorX, t.y + 9).setVisible(true);
   }
 
   closeMenu() {
@@ -218,7 +230,8 @@ export class BattleScene extends Phaser.Scene {
     this.cmdBox.setVisible(false);
     this.cmdCursor.setVisible(false);
     this.cmdItems.forEach((t) => t.destroy());
-    this.cmdItems = [];
+    this.cmdIcons.forEach((ic) => ic.destroy());
+    this.cmdItems = []; this.cmdIcons = [];
   }
 
   moveCursor(delta) {
@@ -256,15 +269,16 @@ export class BattleScene extends Phaser.Scene {
     if (this.battleOver) return;
     this.busy = false;
     this.openMenu(`${this.player.name}は どうする？`, [
-      { label: 'たたかう', onSelect: () => this.chooseAttack() },
-      { label: 'とくぎ',   onSelect: () => this.chooseSkill() },
-      { label: 'どうぐ',   onSelect: () => this.chooseItem() },
-      { label: 'にげる',   onSelect: () => this.chooseFlee() },
+      { label: 'たたかう', icon: 'iconAttack', onSelect: () => this.chooseAttack() },
+      { label: 'とくぎ',   icon: 'iconSkill',  onSelect: () => this.chooseSkill() },
+      { label: 'どうぐ',   icon: 'iconItem',   onSelect: () => this.chooseItem() },
+      { label: 'にげる',   icon: 'iconFlee',   onSelect: () => this.chooseFlee() },
     ]);
   }
 
   chooseAttack() {
     this.closeMenu();
+    this.playerActionPose = 'playerAttack';
     this.resolveRound(() => this.attackSteps(this.player, this.enemy, this.playerSprite, this.enemySprite,
       `${this.player.name}の こうげき！`));
   }
@@ -289,6 +303,7 @@ export class BattleScene extends Phaser.Scene {
     if (s.kind === 'heal') {
       this.resolveRound(() => this.healSteps(this.player, s.amount, s.msg.replace('{user}', this.player.name)));
     } else {
+      this.playerActionPose = 'playerCast'; // とくぎ＝気合いポーズ
       this.resolveRound(() => this.attackSteps(this.player, this.enemy, this.playerSprite, this.enemySprite,
         s.msg.replace('{user}', this.player.name), s.power));
     }
@@ -360,7 +375,10 @@ export class BattleScene extends Phaser.Scene {
   attackSteps(attacker, target, attSprite, tgtSprite, declareMsg, power = 1.0, targetIsPlayer = false) {
     const dmg = this.calcDamage(attacker, target, power);
     return [
-      { text: declareMsg, delay: 650, fn: () => this.lunge(attSprite, tgtSprite) },
+      { text: declareMsg, delay: 650, fn: () => {
+        this.lunge(attSprite, tgtSprite);
+        if (attSprite === this.playerSprite) this.showPlayerPose(this.playerActionPose || 'playerAttack', 460);
+      } },
       {
         text: `${target.name} に ${dmg} の ダメージ！`, delay: 850,
         fn: () => this.applyDamage(target, dmg, tgtSprite, targetIsPlayer),
@@ -372,7 +390,7 @@ export class BattleScene extends Phaser.Scene {
     const before = target.hp;
     const healed = Math.min(target.maxHp, before + amount) - before;
     return [
-      { text: msg, delay: 650, fn: () => this.flashHeal(this.playerSprite) },
+      { text: msg, delay: 650, fn: () => { this.flashHeal(this.playerSprite); this.showPlayerPose('playerDrink', 750); } },
       {
         text: `${target.name}の HPが ${healed} かいふくした！`, delay: 850,
         fn: () => { target.hp += healed; this.refreshPlayerStatus(); },
@@ -398,20 +416,19 @@ export class BattleScene extends Phaser.Scene {
   lunge(sprite, targetSprite) {
     const dir = Math.sign(targetSprite.x - sprite.x) || 1;
     const home = sprite.x;
-    // 主人公の攻撃時だけ、前進トゥイーン中に attack ポーズへ差し替え（足元基準で位置は不変）。
-    const swap = sprite === this.playerSprite && this.textures.exists('playerAttack');
-    if (swap) {
-      sprite.setTexture('playerAttack');
-      this.scaleToHeight(sprite, LAYOUT.playerH);
-    }
-    this.tweens.add({
-      targets: sprite, x: home + dir * 70, duration: 130, yoyo: true, ease: 'Quad.easeOut',
-      onComplete: () => {
-        if (swap) {
-          sprite.setTexture(this.player.sprite);
-          this.scaleToHeight(sprite, LAYOUT.playerH);
-        }
-      },
+    this.tweens.add({ targets: sprite, x: home + dir * 70, duration: 130, yoyo: true, ease: 'Quad.easeOut' });
+  }
+
+  // 主人公を指定ポーズに一時差し替え→ms後にidleへ（足元基準なので位置は不変）。
+  showPlayerPose(key, ms = 500) {
+    if (!key || !this.textures.exists(key)) return;
+    if (this._poseTimer) this._poseTimer.remove();
+    this.playerSprite.setTexture(key);
+    this.scaleToHeight(this.playerSprite, LAYOUT.playerH);
+    this._poseTimer = this.time.delayedCall(ms, () => {
+      if (this.battleOver) return; // 勝敗演出が出ていれば戻さない
+      this.playerSprite.setTexture(this.player.sprite);
+      this.scaleToHeight(this.playerSprite, LAYOUT.playerH);
     });
   }
 
@@ -454,6 +471,12 @@ export class BattleScene extends Phaser.Scene {
   win() {
     this.battleOver = true;
     this.closeMenu();
+    // 勝利ポーズ（ガッツポーズ。勝利演出中は維持・シーン遷移で破棄）
+    if (this._poseTimer) this._poseTimer.remove();
+    if (this.textures.exists('playerVictory')) {
+      this.playerSprite.clearTint().setTexture('playerVictory');
+      this.scaleToHeight(this.playerSprite, LAYOUT.playerH);
+    }
     // 撃破演出：defeatedコマがあれば差し替え、無ければフェード
     if (this.enemy.defeatedSprite && this.textures.exists(this.enemy.defeatedSprite)) {
       this.enemySprite.clearTint().setTexture(this.enemy.defeatedSprite);
