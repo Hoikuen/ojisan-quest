@@ -20,9 +20,9 @@ export const COLORS = {
 // バトル立ち位置（正面ビュー：プレイヤー左手前・敵右奥）
 export const LAYOUT = {
   enemyX: 540,
-  enemyY: 250,
-  enemyH: 200,        // 敵の表示高さ（displayHeight）
+  enemyY: 310,        // 250→310：上端に貼り付きすぎていたのを中央寄りに
+  enemyH: 200,
   playerX: 210,
-  playerY: 360,
-  playerH: 175,       // プレイヤーの表示高さ
+  playerY: 370,       // 360→370：足元ラインに揃える
+  playerH: 175,
 };

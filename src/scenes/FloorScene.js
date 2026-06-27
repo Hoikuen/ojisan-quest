@@ -35,9 +35,10 @@ export class FloorScene extends Phaser.Scene {
 
   build() {
     const f = this.floor;
-    // 背景
+    // 背景（参照を保持して移動演出でスクロールできるようにする）
+    this.bgImage = null;
     if (f.bg && this.textures.exists(f.bg)) {
-      this.add.image(0, 0, f.bg).setOrigin(0, 0).setDisplaySize(GAME_W, GAME_H);
+      this.bgImage = this.add.image(0, 0, f.bg).setOrigin(0, 0).setDisplaySize(GAME_W + 120, GAME_H);
     } else {
       this.cameras.main.setBackgroundColor('#14121f');
     }
@@ -111,10 +112,12 @@ export class FloorScene extends Phaser.Scene {
     const boss = isBossReady();
     this.run.pendingIsBoss = boss;
     this.run.pendingEnemy = boss ? this.floor.boss : pickEncounter();
-    // 少し前進してから戦闘へ
-    const dir = 1;
-    this.tweens.add({ targets: this.player, x: this.player.x + 60 * dir, duration: 360, ease: 'Sine.easeInOut' });
-    this.time.delayedCall(380, () => {
+    // 移動演出：背景を左にパン＋キャラが右へ大きく歩く → フェードアウトで戦闘へ
+    if (this.bgImage) {
+      this.tweens.add({ targets: this.bgImage, x: -110, duration: 520, ease: 'Sine.easeIn' });
+    }
+    this.tweens.add({ targets: this.player, x: this.player.x + 200, duration: 520, ease: 'Sine.easeIn' });
+    this.time.delayedCall(420, () => {
       this.cameras.main.fadeOut(280);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('BattleScene', { returnTo: 'FloorScene' }));
     });

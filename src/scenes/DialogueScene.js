@@ -35,7 +35,7 @@ export class DialogueScene extends Phaser.Scene {
     });
     this.bodyText = this.add.text(x + 24, y + 44, '', {
       fontFamily: 'sans-serif', fontSize: '21px', color: COLORS.text,
-      wordWrap: { width: w - 48 }, lineSpacing: 8,
+      wordWrap: { width: w - 48, useAdvancedWrap: true }, lineSpacing: 8,
     });
     this.hint = this.add.text(x + w - 16, y + h - 12, '▶ Enter / クリック', {
       fontFamily: 'monospace', fontSize: '12px', color: COLORS.textDim,

@@ -47,18 +47,14 @@ export class BattleScene extends Phaser.Scene {
 
   // ── 画面構築 ───────────────────────────────────────────────
   buildBackground() {
-    // 現在フロアの背景があれば使う。無ければオフィス夜→グラデのプレースホルダ。
-    const f = currentFloor();
-    const bgKey = (f && f.bg && this.textures.exists(f.bg)) ? f.bg
-      : (this.textures.exists('battleOffice') ? 'battleOffice' : null);
-    if (bgKey) {
-      this.add.image(0, 0, bgKey).setOrigin(0, 0).setDisplaySize(GAME_W, GAME_H);
-      return;
-    }
+    // バトルは常にグラデーション背景（フロア探索画面と視覚的に区別する）。
     const g = this.add.graphics();
     g.fillGradientStyle(COLORS.bgTop, COLORS.bgTop, COLORS.bgBottom, COLORS.bgBottom, 1);
     g.fillRect(0, 0, GAME_W, GAME_H);
-    g.fillStyle(0x000000, 0.25).fillRect(0, 430, GAME_W, GAME_H - 430);
+    // 足元ライン：スプライトが床に接地して見えるよう薄く強調
+    g.fillStyle(0x1a1836, 0.55).fillRect(0, 310, GAME_W, 110);
+    // メッセージ窓の後ろは暗く
+    g.fillStyle(0x000000, 0.3).fillRect(0, 430, GAME_W, GAME_H - 430);
   }
 
   // フロア名＋進捗（魔物 n/総数 or ボス）を左上に小さく出す。
@@ -155,7 +151,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawWindow(x, y, w, h);
     this.msgText = this.add.text(x + 22, y + 22, '', {
       fontFamily: 'sans-serif', fontSize: '21px', color: COLORS.text,
-      wordWrap: { width: w - 44 }, lineSpacing: 6,
+      wordWrap: { width: w - 44, useAdvancedWrap: true }, lineSpacing: 6,
     });
   }
 
