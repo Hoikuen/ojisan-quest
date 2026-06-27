@@ -3,6 +3,55 @@
 新しいチャット（履歴なし）で続きを作るための作業ログ。**最新の「🔄 引き継ぎ」を最初に読むこと。**
 併せて読む：`docs/GAME_DESIGN.md`（設計・物語前提・進捗）、リポジトリ直下 `CLAUDE.md`、
 `~/Developer/games/` 直下の `AGENTS.md` / `PHASER3_CONSTRAINTS.md` / `VERIFICATION_ROUTINE.md` / `MISTAKES.md`。
+**設計の最新正本**：`docs/STORY.md`（物語）・`docs/GAME_PLAN.md`（構成/システム/ロードマップ・★詳細設計）・`docs/STORY_SCRIPT.md`（台詞脚本）・`docs/ART_ORDERS.md`＋`docs/ART_ORDER_PROMPTS.md`（発注）。`GAME_DESIGN.md` は初期骨子（一部旧記述・冒頭に注記あり）。
+
+---
+
+## 🔄 引き継ぎ（2026-06-27・その3：短編RPG設計確定＋アート採用＋Phase A着手）
+
+### このセッションでやったこと
+- **方針を「30〜60分の短編RPG」に拡張・確定**。`STORY.md`/`GAME_PLAN.md`/`STORY_SCRIPT.md` を新設。
+  - 確定：会社=**新谷商事**／拠点=**喫茶のりちゃん**（女主人=**ママ/のりちゃん**）／主人公="おじさん"のまま／トーン**コミカル8:哀愁2**／仲間**2人**／ママ=先人 匂わせ。
+  - 構成：**5階層＋拠点**、**軽量な通路移動**（タイルマップ不使用・確定）、2人パーティ、技5〜7、ショップ、セーブ、**3エンディング分岐**（true=帰る/normal=撃破/bad=全滅）。
+  - `GAME_PLAN.md`「詳細設計」に 画面遷移図／FLOORS構造／セーブJSONスキーマ／戦闘エッジ（target/kind拡張）／仲間ステ／ショップ価格／社長第2形態 まで明文化。
+  - **独立検証4ラウンド**（別エージェント）で 条件付きGo×3→**Go** に収束（穴を都度修正）。
+- **発注パッケージ**：`ART_ORDERS.md`（全体台帳）＋`ART_ORDER_PROMPTS.md`（1イラスト=1プロンプトのコピペ用）。
+- **役割分担**：**Codex=イラスト生成**（`orders/incoming/<key>/` に納品・**src/public は触らない**）／**Claude=ストーリー＆コード**。`orders/` は `.gitignore`（中間物）。
+- **アート採用・組込（実機検証済み・コミット）**：
+  - 背景=**夜オフィス**（`battle_office.png`）／**9スライス窓枠**（`drawWindow`→nineslice）／主人公**attack**（こうげき前進中だけ差替）。
+  - タイトル**ロゴ**（日本語崩れなし）／**コマンドアイコン4＋カーソル**／主人公ポーズ **cast(とくぎ)・drink(どうぐ/一服)・victory(勝利)**。
+- **Phase A 増分1**：`DialogueScene`（データ駆動会話・話者名・手送り）＋`story.js`（`intro`/`cafe_intro`）＋ **Title→導入カットシーン→戦闘** 接続。
+
+### 現状の実機フロー（全部 main に commit 済み／作業ツリーはクリーン）
+`Boot→Title(ロゴ)→「はじめる」→startRun→DialogueScene('intro')→BattleScene`（=フロア脱出ラン：イモムシ×2→果物→大仏豚、レベルアップ・脱出/敗北→ResultScene）。
+起動：`npm run dev`（5173／プレビューは別ポート自動割当）。最新コミット **`ac04e6d`**。
+
+### Codex 納品済みだが未組込（`orders/incoming/` に在庫・採用待ち）
+- **背景**：bgStorageB1 / bgEntranceNight / bgExecFloor / bgPresidentRoom / bgCafe / bgTitle / bgEndingEscape / bgGameOver（オフィス夜のみ採用済み）。
+- **敵7種**：paperTower / vendingSpirit / lastTrainZombie / copierGhost / phoneEye / cardSwarm / sectionChief。**ボス=president**。
+- **NPC4**：npcMama / npcReception / npcGuard / npcPresidentHuman。**仲間3**：mate_kohai / mate_ol / mate_senpai。
+- **UI**：gauge（配置のみ）・ui_extended・item_extra_set・主人公 guard。
+- → これらは **Phase A/B のシーン（拠点・フロア・エンカウント）が出来て初めて画面に出る**。組込時は `orders/incoming/<key>/extracted/*` を `public/` にコピー＋`assets.js`登録＋データ配線（背景はそのまま画像、敵/NPCは `content.js`/`story.js`）。
+
+### 既知の問題・未解決
+- **敵が床より少し浮く**（リアル背景化で目立つ）。Phase B/総差し替え時に `LAYOUT.enemyY` を下げて接地を検討（今は許容・本人OK）。
+- gauge 未配線（HUD整備時にまとめて。現行の自前バーは綺麗）。guard 未配線（ぼうぎょは Phase D）。
+- バランス・テンポ未調整（実機プレイ後に `content.js`/`LEVEL_TABLE` で）。
+- DialogueScene の**選択肢**は未実装（社長戦 go/fight＝Phase E で追加）。
+
+### 次にやること（順）
+1. **Phase A 増分2**：`CafeScene`＝喫茶のりちゃん（メニュー：はなす/ほじゅう/セーブ/出発・`cafe_intro`再生）＋**セーブ/ロード**（`localStorage 'ojisanQuest.save'`・`GAME_PLAN`スキーマ）＋ Title「つづきから」。遷移を Title→導入→拠点→出発→戦闘 に。
+2. **Phase B**：`FloorScene`（軽量通路ノード）＋エンカウント抽選＋階ボス。`FLOOR_RUN`→`FLOORS`（5階）。**ここで在庫の背景/敵/NPCを順次採用・配線**。
+3. Phase C（2人パーティ＝BattleScene複数アクター化）→ D（弱点/敵パターン）→ E（解放イベント/3エンディング/ショップ）→ F（バランス/独立検証Go）。`GAME_PLAN.md` ロードマップ参照。
+
+### 主に触るファイル
+- `src/scenes/`：BattleScene（戦闘＋ポーズ）/ TitleScene / ResultScene / DialogueScene。今後 CafeScene・FloorScene を追加。
+- `src/data/`：content.js（敵/技/LEVEL_TABLE/FLOOR_RUN）/ assets.js（キー→パス・採用窓口）/ story.js（脚本）。
+- `src/state/run.js`：ラン状態＋grantExp。Phase C で party 配列＋save/load を足す。
+
+### git/検証メモ
+- 匿名 `hoikuen`、コミット末尾 `Co-Authored-By: Claude Opus 4.8`。`orders/`・`.claude/`・`node_modules/`・`dist/` 非追跡。
+- 設計＝**独立エージェント4ラウンドでGo**。実装＝`npm run build`＋**実起動パスを `game.step()` 手動駆動**＋スクショで確認（プレビューはhiddenタブでrAF停止のため。create()を迂回しない＝MISTAKES教訓）。**最終確認は本人の実機プレイ**。
 
 ---
 
