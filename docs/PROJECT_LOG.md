@@ -7,6 +7,60 @@
 
 ---
 
+## 🔄 引き継ぎ（2026-06-27・その4：Phase A+B 完了・B1フロアループ動作確認）
+
+### このセッションでやったこと
+- **Phase A 増分2**：`CafeScene`（喫茶のりちゃん・ママスプライト表示・はなす/ほじゅう/セーブ/出発メニュー）＋`localStorage`セーブ/ロード（SAVE_VERSION=2）＋Title「つづきから」。
+- **Phase B**：`FloorScene` 新規作成、`run.js` をフロアモデルに刷新。
+  - FLOORS配列 + `floorIndex`/`stepInFloor`/`pendingEnemy`/`pendingIsBoss`/`lastWon` モデル。
+  - `currentFloor()`/`isBossReady()`/`hasNextFloor()`/`pickEncounter()`（重み付き抽選）。
+  - BattleScene を単発戦闘に変更（`pendingEnemy`読み取り・`returnTo: 'FloorScene'`パターン・`win()`でlastWon=true）。
+  - CafeScene「出発」→ FloorScene、FloorScene 通常→BattleScene→FloorScene（stepInFloor++）、ボス→clearFloor()→次階or ResultScene。
+  - B1地下倉庫：`paperTower`・`rollingBagLord`追加。`b1_intro` 台詞追加。
+  - アセット採用：`bgStorageB1` / `enemyPaperIdle` / `enemyRollingBagIdle`（bgCafe / npcMama は その3で採用済み）。
+- **コミット `d73dead`**（Phase B・B1フロア実装）。作業ツリークリーン。
+
+### 現状の実機フロー
+`Boot → Title(ロゴ) → はじめる → DialogueScene('intro') → CafeScene(ママ) → DialogueScene('cafe_intro') → CafeScene(メニュー) → 出発 → FloorScene(B1) → DialogueScene('b1_intro') → FloorScene → すすむ → BattleScene → 勝利 → FloorScene(stepInFloor++) → …3回→ ボスにいどむ → BattleScene(ボス) → clearFloor() → ResultScene('win')`
+- セーブ：CafeSceneで保存、Titleで「つづきから」ロード。
+
+### 検証結果（プレビュー目視）
+- bgCafe + npcMama：画面に正しく表示 ✓
+- bgStorageB1：暗い倉庫の雰囲気 ✓
+- 書類タワー（paperTower）敵スプライト：表示 ✓
+- コマンドメニュー（たたかう/とくぎ/どうぐ/にげる＋アイコン）：表示 ✓
+- win()「書類タワーをたおした！」勝利ポーズ：表示 ✓
+- FloorScene 戻り（魔物 0/3 → 1/3、おじさんが右に進む）：動作 ✓
+- runSequence delayedCall：タイマー動作確認済み（enemyHP減少・メッセージ更新）✓
+- コンソールエラー：なし ✓
+- **eval検証の副作用注意**：`window.__game.scene.start()` (SceneManager直呼び) は現シーンを停止しないため複数シーンが並走するバグが出る。これはテスト手法の問題であり本体のバグではない。本番は `this.scene.start()` (ScenePlugin) 経由で正常動作する。
+
+### Codex 在庫（未採用）
+- **背景**：bgEntranceNight / bgExecFloor / bgPresidentRoom / bgTitle / bgEndingEscape / bgGameOver（→ Phase B 残フロア組込時）。
+- **敵6種**：vendingSpirit / lastTrainZombie / copierGhost / phoneEye / cardSwarm / sectionChief（→ 各フロアの FLOORS.encounters に追加）。ボス：president。
+- **NPC**：npcReception / npcGuard / npcPresidentHuman。仲間：mate_kohai / mate_ol / mate_senpai（→ Phase C）。
+- UI：gauge / ui_extended / guard（→ Phase D/E）。
+
+### 既知の問題
+- フロアは B1（地下倉庫）のみ実装。1F〜屋上（FLOORS 追加）は Phase B 続きで追加予定。
+- 選択肢付き会話（DialogueScene `choices`）は未実装（Phase E 社長戦で必要）。
+- 敵の足が少し浮く（背景接地ライン未調整）。許容。
+- gauge 未配線（自前バーで代替中。整備は Phase D）。
+
+### 次にやること（順）
+1. **FLOORS 追加**（1F〜屋上）：`content.js` の FLOORS 配列に新エントリ追加＋在庫の背景/敵を配線。
+2. **Phase C**：2人パーティ（BattleScene に party 配列、run.js に companions）。
+3. Phase D（弱点/パターン）→ E（ショップ/3エンディング/選択肢会話）→ F（バランス/独立検証）。
+4. **本人の実機プレイ**で通し確認（エンカウントのランダム性・ボス強度・テンポ）を最優先。
+
+### 主に触るファイル
+- `src/data/content.js`：FLOORS 追加・敵データ追加が中心。
+- `src/scenes/FloorScene.js`：フロア演出（現状シンプル・拡張しやすい構造）。
+- `src/state/run.js`：party 追加は Phase C でここに。
+- `src/scenes/BattleScene.js`：Phase C でパーティ複数アクター化。
+
+---
+
 ## 🔄 引き継ぎ（2026-06-27・その3：短編RPG設計確定＋アート採用＋Phase A着手）
 
 ### このセッションでやったこと
