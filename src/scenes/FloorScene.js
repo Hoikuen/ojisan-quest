@@ -44,11 +44,9 @@ export class FloorScene extends Phaser.Scene {
     }
 
     // 進捗HUD
-    this.add.text(16, 12, f.name, { fontFamily: 'sans-serif', fontSize: '15px', color: '#ffe7c2', fontStyle: 'bold' });
+    this.add.text(16, 14, f.name, { fontFamily: 'sans-serif', fontSize: '15px', color: '#ffe7c2', fontStyle: 'bold' });
     const ready = isBossReady();
-    this.add.text(16, 32, ready ? '奥に ボスの 気配……' : `魔物 ${this.run.stepInFloor}/${f.steps}`, {
-      fontFamily: 'monospace', fontSize: '13px', color: COLORS.textDim,
-    });
+    this.buildProgressBar(ready);
 
     // ボス扉（右端）。ボス到達可なら強調。
     const doorColor = ready ? 0xffe24a : 0x555a72;
@@ -66,6 +64,74 @@ export class FloorScene extends Phaser.Scene {
     this.tweens.add({ targets: this.player, y: 374, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     this.buildMenu(ready);
+  }
+
+  buildProgressBar(ready) {
+    const f = this.floor;
+    const step = this.run.stepInFloor || 0;
+    const cy = 46; // ノードの中心Y
+
+    if (f.steps === 0) {
+      // 屋上など直行フロア：ボスノードのみ表示
+      this.add.text(GAME_W / 2, cy, '── ボスフロア ──', {
+        fontFamily: 'monospace', fontSize: '13px', color: '#ff8888',
+      }).setOrigin(0.5);
+      return;
+    }
+
+    // 通常フロア：エンカウントノード × steps ＋ ボスノード
+    const totalNodes = f.steps + 1;
+    const nodeD = 26, lineGap = 52;
+    const segW = nodeD + lineGap;
+    const totalW = nodeD + (totalNodes - 1) * segW;
+    const sx = (GAME_W - totalW) / 2;
+    const r = nodeD / 2;
+
+    const g = this.add.graphics();
+    let currentCx = null;
+
+    for (let i = 0; i < totalNodes; i++) {
+      const cx = sx + i * segW + r;
+      const isBoss = i === totalNodes - 1;
+      const done = !isBoss && i < step;
+      const current = (!isBoss && !ready && i === step) || (isBoss && ready);
+
+      if (current) currentCx = cx;
+
+      // ノード間の接続線
+      if (i < totalNodes - 1) {
+        g.fillStyle(i < step ? 0x3ab84a : 0x363060, 1).fillRect(cx + r, cy - 2, lineGap, 4);
+      }
+
+      // ノード本体
+      if (done) {
+        g.fillStyle(0x2a8a3a, 1).fillCircle(cx, cy, r);
+      } else if (current) {
+        g.fillStyle(0xffe24a, 1).fillCircle(cx, cy, r);
+      } else if (isBoss) {
+        g.fillStyle(0x500f0f, 1).fillCircle(cx, cy, r);
+        g.lineStyle(2, 0xcc2222, 1).strokeCircle(cx, cy, r);
+      } else {
+        g.fillStyle(0x1e1c3a, 1).fillCircle(cx, cy, r);
+        g.lineStyle(1, 0x505090, 0.9).strokeCircle(cx, cy, r);
+      }
+
+      // ラベル
+      const [lbl, col] = done ? ['✓', '#aaffaa']
+        : current ? ['▶', '#000000']
+        : isBoss ? ['！', '#ff6666']
+        : ['？', '#505088'];
+      this.add.text(cx, cy, lbl, {
+        fontFamily: 'monospace', fontSize: '12px', color: col, fontStyle: 'bold',
+      }).setOrigin(0.5);
+    }
+
+    // 現在地ノードのグロー点滅
+    if (currentCx !== null) {
+      const glow = this.add.graphics();
+      glow.fillStyle(ready ? 0xff4444 : 0xffe24a, 0.22).fillCircle(currentCx, cy, r + 8);
+      this.tweens.add({ targets: glow, alpha: 0.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
   }
 
   buildMenu(ready) {
