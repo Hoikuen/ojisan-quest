@@ -61,26 +61,30 @@ export const RPG_ENEMIES = {
         msg: 'イモムシ社員の たいあたり！' },
     ],
   },
+  // 中層 階ボス（主任＝果物メガネ女子。旧スライスの雑魚から格上げ）
   fruitGirl: {
     name: '果物メガネ女子',
     sprite: 'enemyFruitIdle',
     hurtSprite: 'enemyFruitHurt',
-    hp: 34, atk: 9, def: 4, spd: 7, exp: 14, gold: 12,
-    flavorAppear: '果物メガネ女子が 立ちふさがった！',
+    isBoss: true,
+    hp: 90, atk: 16, def: 8, spd: 9, exp: 34, gold: 60,
+    flavorAppear: '主任——果物メガネ女子が 立ちふさがった！',
     actions: [
       { name: 'いちご投げ', kind: 'attack', power: 1.2, msg: '果物メガネ女子の いちご投げ！' },
+      { name: '会議延長',   kind: 'attack', power: 1.6, msg: '果物メガネ女子は 会議を 延長した！　精神に くる！' },
     ],
   },
+  // 上層 階ボス（部長＝大仏豚ぶちょう。終盤向けにステータス強化）
   buddhaPig: {
     name: '大仏豚ぶちょう',
     sprite: 'enemyBossIdle',
     hurtSprite: 'enemyBossHurt',
     isBoss: true,
-    hp: 80, atk: 13, def: 8, spd: 5, exp: 30, gold: 60,
+    hp: 95, atk: 16, def: 9, spd: 6, exp: 40, gold: 80,
     flavorAppear: 'このフロアの主——大仏豚ぶちょうが 立ちはだかった！',
     actions: [
       { name: 'おやつ投げ', kind: 'attack', power: 1.0, msg: '大仏豚ぶちょうは おやつを 投げつけた！' },
-      { name: '残業の圧',   kind: 'attack', power: 1.6, msg: '大仏豚ぶちょうは 残業の圧を かけてきた！' },
+      { name: '残業の圧',   kind: 'attack', power: 1.7, msg: '大仏豚ぶちょうは 残業の圧を かけてきた！' },
     ],
   },
   // B1 雑魚（新規アート）
@@ -105,6 +109,101 @@ export const RPG_ENEMIES = {
       { name: '書類ばらまき', kind: 'attack', power: 0.9, msg: '転がるカバンの主が 書類を ばらまいた！' },
     ],
   },
+
+  // ── 1F ロビー受付（雑魚2＋階ボス）──────────────────────────────
+  vendingSpirit: {
+    name: '自販機の精',
+    sprite: 'enemyVendingIdle',
+    hp: 30, atk: 9, def: 5, spd: 5, exp: 9, gold: 8,
+    flavorAppear: '自販機の精が 釣り銭を 切らして 怒っている！',
+    actions: [
+      { name: '釣り銭ビーム', kind: 'attack', power: 1.1, msg: '自販機の精の 釣り銭ビーム！' },
+    ],
+  },
+  lastTrainZombie: {
+    name: '終電ゾンビ社員',
+    sprite: 'enemyZombieIdle',
+    hp: 34, atk: 10, def: 5, spd: 4, exp: 10, gold: 9,
+    flavorAppear: '終電ゾンビ社員が 吊り革を 握りしめて 迫る！',
+    actions: [
+      { name: '寝落ちタックル', kind: 'attack', power: 1.1, msg: '終電ゾンビ社員の 寝落ちタックル！' },
+    ],
+  },
+  // 1F 階ボス（受付の主＝課長ロボを流用）
+  receptionLord: {
+    name: '受付の主',
+    sprite: 'enemySectionChiefIdle',
+    isBoss: true,
+    hp: 70, atk: 13, def: 7, spd: 7, exp: 24, gold: 40,
+    flavorAppear: '受付の主が 内線を 一斉に 鳴らした！',
+    actions: [
+      { name: '内線コール', kind: 'attack', power: 1.2, msg: '受付の主の 内線コール！　耳が いたい！' },
+      { name: '再提出だ',   kind: 'attack', power: 1.5, msg: '受付の主は ハンコを 構えた。『再提出だ』' },
+    ],
+  },
+
+  // ── 中層 オフィス（雑魚3。階ボスは fruitGirl）──────────────────
+  copierGhost: {
+    name: 'コピー機オバケ',
+    sprite: 'enemyCopierIdle',
+    hp: 40, atk: 12, def: 6, spd: 6, exp: 14, gold: 12,
+    flavorAppear: 'コピー機オバケが 両面印刷で 襲いかかる！',
+    actions: [
+      { name: '両面印刷', kind: 'attack', power: 1.1, msg: 'コピー機オバケの 両面印刷！' },
+    ],
+  },
+  phoneEye: {
+    name: 'スマホ目玉',
+    sprite: 'enemyPhoneIdle',
+    hp: 32, atk: 13, def: 4, spd: 9, exp: 14, gold: 12,
+    flavorAppear: 'スマホ目玉が 通知を 浴びせてきた！（未読 999＋）',
+    actions: [
+      { name: '通知の雨', kind: 'attack', power: 1.2, msg: 'スマホ目玉の 通知の雨！' },
+    ],
+  },
+  cardSwarm: {
+    name: '名刺の群れ',
+    sprite: 'enemyCardIdle',
+    hp: 44, atk: 11, def: 7, spd: 6, exp: 15, gold: 13,
+    flavorAppear: '名刺の群れが 渦を巻いて 名刺交換を 求めている！',
+    actions: [
+      { name: '名刺交換', kind: 'attack', power: 1.1, msg: '名刺の群れが 名刺交換を 強要した！' },
+    ],
+  },
+
+  // ── 上層 役員（雑魚2＝既存スプライトを役員フロア用に強化流用）──
+  overtimeWraith: {
+    name: '残業の亡霊',
+    sprite: 'enemyZombieIdle',
+    hp: 52, atk: 15, def: 8, spd: 7, exp: 20, gold: 16,
+    flavorAppear: '残業の亡霊が 「お前の代わりはいない」と 囁いた！',
+    actions: [
+      { name: '同調圧力', kind: 'attack', power: 1.2, msg: '残業の亡霊の 同調圧力！' },
+    ],
+  },
+  auditEye: {
+    name: '監査の目',
+    sprite: 'enemyPhoneIdle',
+    hp: 46, atk: 16, def: 6, spd: 11, exp: 20, gold: 16,
+    flavorAppear: '監査の目が じっと こちらを 見据えている！',
+    actions: [
+      { name: '粗探し', kind: 'attack', power: 1.3, msg: '監査の目の 粗探し！　ぐさりと くる！' },
+    ],
+  },
+
+  // ── 屋上 社長室（ラスボス）─────────────────────────────────────
+  president: {
+    name: '社長',
+    sprite: 'enemyPresidentIdle',
+    isBoss: true,
+    hp: 130, atk: 19, def: 10, spd: 8, exp: 50, gold: 120,
+    flavorAppear: '最上階の主——社長が 椅子を 回した。',
+    actions: [
+      { name: 'もう少しだけ', kind: 'attack', power: 1.2, msg: '社長は 「もう少しだけ」と 囁いた。' },
+      { name: '残業命令',     kind: 'attack', power: 1.7, msg: '社長は 残業命令を 下した！' },
+      { name: 'やりがい搾取', kind: 'attack', power: 1.4, msg: '社長は やりがいを 搾取してきた！' },
+    ],
+  },
 };
 
 // ── フロア定義（Phase B：軽量通路＋エンカウント抽選＋階ボス）────
@@ -117,17 +216,29 @@ export const FLOORS = [
     boss: 'rollingBagLord',
     introStory: 'b1_intro',
   },
-  // 1F / 中層 / 上層 / 屋上 は順次追加（在庫アートあり）。
+  {
+    id: 'f1', name: '1F ロビー受付', bg: 'bgEntranceNight', steps: 3,
+    encounters: [{ enemy: 'vendingSpirit', w: 3 }, { enemy: 'lastTrainZombie', w: 3 }],
+    boss: 'receptionLord',
+    introStory: 'f1_intro',
+  },
+  {
+    id: 'office', name: '中層 オフィス', bg: 'bgOfficeNight', steps: 4,
+    encounters: [{ enemy: 'copierGhost', w: 2 }, { enemy: 'phoneEye', w: 2 }, { enemy: 'cardSwarm', w: 2 }],
+    boss: 'fruitGirl',
+    introStory: 'office_intro',
+  },
+  {
+    id: 'exec', name: '上層 役員', bg: 'bgExecFloor', steps: 4,
+    encounters: [{ enemy: 'overtimeWraith', w: 3 }, { enemy: 'auditEye', w: 2 }],
+    boss: 'buddhaPig',
+    introStory: 'exec_intro',
+  },
+  {
+    // 屋上は直行（steps:0 で入場即ボス扉）。社長戦の選択肢/第2形態は Phase E。
+    id: 'rooftop', name: '屋上 社長室', bg: 'bgPresidentRoom', steps: 0,
+    encounters: [],
+    boss: 'president',
+    introStory: 'rooftop_intro',
+  },
 ];
-
-// ── エンカウント（エリア→敵編成。今は固定順の連戦に使う）────────
-export const ENCOUNTERS = {
-  floorB1: { enemies: ['caterpillar'], rate: 1.0 },
-};
-
-// ── フロアの脱出ラン（縦スライス：連戦→ボス→脱出）─────────────
-// queue を先頭から順に戦う。HP/MP・レベル・持ち物は run.js が戦闘をまたいで保持する。
-export const FLOOR_RUN = {
-  name: '地下倉庫フロア',
-  enemies: ['caterpillar', 'caterpillar', 'fruitGirl', 'buddhaPig'],
-};

@@ -10,6 +10,13 @@ export class ResultScene extends Phaser.Scene {
     const win = data?.outcome === 'win';
     this.cameras.main.setBackgroundColor(win ? '#0e1a12' : '#1a0e10');
 
+    // 採用済み背景があれば敷く（脱出＝夜明け／力尽き＝暗い机）。無ければ単色のまま。
+    const bgKey = win ? 'bgEndingEscape' : 'bgGameOver';
+    if (this.textures.exists(bgKey)) {
+      this.add.image(0, 0, bgKey).setOrigin(0, 0).setDisplaySize(GAME_W, GAME_H);
+      this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.35).setOrigin(0, 0); // 文字を読みやすく
+    }
+
     this.add.text(GAME_W / 2, 160, win ? '定時退社！' : 'ゲームオーバー', {
       fontFamily: 'sans-serif', fontSize: '52px',
       color: win ? '#ffe24a' : '#e05a4a', fontStyle: 'bold',

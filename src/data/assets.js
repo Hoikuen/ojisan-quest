@@ -20,9 +20,28 @@ export const IMAGES = {
   enemyPaperIdle: `${S}/enemy_paper/idle.png`,
   enemyRollingBagIdle: `${S}/enemy_rolling_bag/idle.png`,
 
+  // ── 敵（1F：自販機の精・終電ゾンビ／受付の主＝課長ロボ流用）────
+  enemyVendingIdle: `${S}/enemy_vending/idle.png`,
+  enemyZombieIdle: `${S}/enemy_zombie/idle.png`,
+  enemySectionChiefIdle: `${S}/enemy_section_chief/idle.png`,
+
+  // ── 敵（中層：コピー機オバケ・スマホ目玉・名刺の群れ）──────────
+  enemyCopierIdle: `${S}/enemy_copier/idle.png`,
+  enemyPhoneIdle: `${S}/enemy_phone/idle.png`,
+  enemyCardIdle: `${S}/enemy_card/idle.png`,
+
+  // ── ラスボス：社長（屋上）─────────────────────────────────────
+  enemyPresidentIdle: `${S}/enemy_president/idle.png`,
+
   // ── 背景・NPC・UI（発注・採用済み。後でトータル差し替え予定）──
   battleOffice: `${BG}/battle_office.png`,
   bgStorageB1: `${BG}/storage_b1.png`,
+  bgEntranceNight: `${BG}/entrance_night.png`,
+  bgOfficeNight: `${BG}/office_night.png`,
+  bgExecFloor: `${BG}/exec_floor.png`,
+  bgPresidentRoom: `${BG}/president_room.png`,
+  bgEndingEscape: `${BG}/ending_escape.png`,
+  bgGameOver: `${BG}/game_over.png`,
   bgCafe: `${BG}/cafe.png`,
   npcMama: `${S}/npc_mama/idle.png`,
   uiWindow: `${UI}/window.png`,
