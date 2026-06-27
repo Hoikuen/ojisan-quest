@@ -48,11 +48,15 @@ export class BattleScene extends Phaser.Scene {
 
   // ── 画面構築 ───────────────────────────────────────────────
   buildBackground() {
+    // 採用済みの背景画像があれば使う。無ければグラデのプレースホルダ。
+    if (this.textures.exists('battleOffice')) {
+      const img = this.add.image(0, 0, 'battleOffice').setOrigin(0, 0);
+      img.setDisplaySize(GAME_W, GAME_H);
+      return;
+    }
     const g = this.add.graphics();
-    // 上下グラデ風（夜のオフィス）。背景画像が来たらこのGraphicsを画像に差し替え。
     g.fillGradientStyle(COLORS.bgTop, COLORS.bgTop, COLORS.bgBottom, COLORS.bgBottom, 1);
     g.fillRect(0, 0, GAME_W, GAME_H);
-    // 床ライン
     g.fillStyle(0x000000, 0.25).fillRect(0, 430, GAME_W, GAME_H - 430);
   }
 
@@ -80,8 +84,12 @@ export class BattleScene extends Phaser.Scene {
 
   scaleToHeight(img, h) { img.setScale(h / img.height); }
 
-  // 角丸＋白縁のウィンドウ枠（王道RPG風プレースホルダ）
+  // ウィンドウ枠。採用済みUI画像があれば9スライス、無ければGraphicsプレースホルダ。
   drawWindow(x, y, w, h) {
+    if (this.textures.exists('uiWindow')) {
+      // 64x64 の角丸枠を9スライス（四隅14px）。中央は引き伸ばし。
+      return this.add.nineslice(x, y, 'uiWindow', undefined, w, h, 14, 14, 14, 14).setOrigin(0, 0);
+    }
     const g = this.add.graphics();
     g.fillStyle(COLORS.windowFill, 0.92).fillRoundedRect(x, y, w, h, 10);
     g.lineStyle(3, COLORS.windowEdge, 1).strokeRoundedRect(x, y, w, h, 10);
@@ -390,7 +398,21 @@ export class BattleScene extends Phaser.Scene {
   lunge(sprite, targetSprite) {
     const dir = Math.sign(targetSprite.x - sprite.x) || 1;
     const home = sprite.x;
-    this.tweens.add({ targets: sprite, x: home + dir * 70, duration: 130, yoyo: true, ease: 'Quad.easeOut' });
+    // 主人公の攻撃時だけ、前進トゥイーン中に attack ポーズへ差し替え（足元基準で位置は不変）。
+    const swap = sprite === this.playerSprite && this.textures.exists('playerAttack');
+    if (swap) {
+      sprite.setTexture('playerAttack');
+      this.scaleToHeight(sprite, LAYOUT.playerH);
+    }
+    this.tweens.add({
+      targets: sprite, x: home + dir * 70, duration: 130, yoyo: true, ease: 'Quad.easeOut',
+      onComplete: () => {
+        if (swap) {
+          sprite.setTexture(this.player.sprite);
+          this.scaleToHeight(sprite, LAYOUT.playerH);
+        }
+      },
+    });
   }
 
   flashHurt(target, sprite, isPlayer) {

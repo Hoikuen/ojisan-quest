@@ -2,13 +2,19 @@
 // 実画像が来たら public/ 配下の同名PNGを上書きするだけで差し替わる（コード変更ゼロ）。
 // パスは先頭スラッシュ無しの相対参照（base付きビルドでも壊れない）。
 const S = 'assets/sprites/extracted';
+const BG = 'assets/backgrounds';
+const UI = 'assets/ui';
 
 export const IMAGES = {
   // ── 主人公おじさん（流用：A案 normal）─────────────────────────
-  // 現状あるコマ：idle / hurt / walk_1..4。attack ポーズは未発注なので
-  // 当面は idle のまま前進トゥイーンで「攻撃」を表現する（後で attack を発注）。
+  // idle / hurt / attack。attack は発注・採用済み（前進トゥイーン中だけ差し替える）。
   playerIdle: `${S}/player/idle.png`,
   playerHurt: `${S}/player/hurt.png`,
+  playerAttack: `${S}/player/attack.png`,
+
+  // ── バトル背景・UI（発注・採用済み。後でトータル差し替え予定）──
+  battleOffice: `${BG}/battle_office.png`,
+  uiWindow: `${UI}/window.png`,
 
   // ── 敵：イモムシ社員（最小ループの最初の1体）────────────────
   enemyCaterpillarIdle: `${S}/enemy_caterpillar/idle.png`,
