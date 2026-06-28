@@ -88,6 +88,8 @@ export class FloorScene extends Phaser.Scene {
     const r = nodeD / 2;
 
     const g = this.add.graphics();
+    // ノードバー全体に半透明黒帯（どの背景でも視認できるように）
+    g.fillStyle(0x000000, 0.55).fillRoundedRect(sx - 14, cy - r - 8, totalW + 28, nodeD + 16, 6);
     let currentCx = null;
 
     for (let i = 0; i < totalNodes; i++) {
