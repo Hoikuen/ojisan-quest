@@ -232,7 +232,7 @@ export const COMPANIONS = {
   },
   ol: {
     name: 'OL田中さん', key: 'ol',
-    sprite: 'enemyFruitIdle', hurtSprite: 'enemyFruitHurt', // 果物メガネ女子スプライト流用（同テイスト）
+    sprite: 'olIdle', hurtSprite: 'olHurt',
     level: 1, exp: 0,
     hp: 22, maxHp: 22, mp: 14, maxMp: 14,
     atk: 6, def: 4, spd: 9,
