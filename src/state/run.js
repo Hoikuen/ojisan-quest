@@ -74,6 +74,11 @@ export function loadRun() {
     // JSON round-trip で player と party[0] が別オブジェクトになるので再リンク。
     if (!state.party) { state.party = [state.player]; }
     else { state.party[0] = state.player; }
+    // 仲間名を content.js の最新値で上書き（セーブ後に名前変更した場合の補正）
+    for (let i = 1; i < state.party.length; i++) {
+      const m = state.party[i];
+      if (m.key && COMPANIONS[m.key]) m.name = COMPANIONS[m.key].name;
+    }
     return state;
   } catch (e) { return null; }
 }
