@@ -68,6 +68,14 @@ export class FloorScene extends Phaser.Scene {
       }).setOrigin(0.5);
     }
 
+    // 通常扉（左端）。プレイヤーが入ってきた扉。
+    if (this.textures.exists('doorNormal')) {
+      const nd = this.add.image(80, 375, 'doorNormal').setOrigin(0.5, 1);
+      nd.setScale(120 / nd.height);
+    } else {
+      this.add.rectangle(80, 310, 60, 100, 0x0b0d1a, 0.7).setStrokeStyle(2, 0x444466);
+    }
+
     // おじさん（進捗に応じて右へ寄る＝通路を進んでいる感じ）
     const t = f.steps > 0 ? Math.min(1, this.run.stepInFloor / f.steps) : 1;
     const px = 120 + t * 430;

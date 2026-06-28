@@ -74,5 +74,6 @@ export const IMAGES = {
   olHurt: `${S}/office_lady/hurt.png`,
 
   // ── フロア扉スプライト ────────────────────────────────────────
+  doorNormal: `${S}/door_normal/idle.png`,
   doorBoss: `${S}/door_boss/idle.png`,
 };
