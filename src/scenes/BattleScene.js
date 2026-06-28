@@ -88,6 +88,7 @@ export class BattleScene extends Phaser.Scene {
       .setOrigin(0.5, 1);
     this.enemySprite._homeX = LAYOUT.enemyX;
     this.scaleToHeight(this.enemySprite, LAYOUT.enemyH);
+    this.enemySprite._baseScale = this.enemySprite.scaleX; // defeated 差替時に同スケールを保持
   }
 
   scaleToHeight(img, h) { img.setScale(h / img.height); }
@@ -562,7 +563,8 @@ export class BattleScene extends Phaser.Scene {
 
     if (this.enemy.defeatedSprite && this.textures.exists(this.enemy.defeatedSprite)) {
       this.enemySprite.clearTint().setTexture(this.enemy.defeatedSprite);
-      this.scaleToHeight(this.enemySprite, LAYOUT.enemyH);
+      // idle と同じスケールを使う（テクスチャの縦横比が違っても拡大しない）
+      this.enemySprite.setScale(this.enemySprite._baseScale);
       this.tweens.add({ targets: this.enemySprite, alpha: 0, duration: 700, delay: 250 });
     } else {
       this.tweens.add({ targets: this.enemySprite, alpha: 0, angle: 20, duration: 600 });
