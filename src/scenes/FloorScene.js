@@ -145,6 +145,7 @@ export class FloorScene extends Phaser.Scene {
 
     this.options = [
       { label: ready ? 'ボスにいどむ' : 'すすむ', onSelect: () => this.advanceFloor() },
+      ...(ready ? [{ label: 'さらに鍛える', onSelect: () => this.trainMore() }] : []),
       { label: '拠点へもどる', onSelect: () => this.toCafe() },
     ];
     const mx = 560, my = 458, mw = 212, mh = 78;
@@ -189,6 +190,14 @@ export class FloorScene extends Phaser.Scene {
       this.cameras.main.fadeOut(280);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('BattleScene', { returnTo: 'FloorScene' }));
     });
+  }
+
+  // ボス到達後「もう一周雑魚を倒す」 → stepInFloor をリセットして同フロアを再周
+  trainMore() {
+    this._busy = true;
+    this.run.stepInFloor = 0;
+    this.cameras.main.fadeOut(240);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('FloorScene'));
   }
 
   toCafe() {

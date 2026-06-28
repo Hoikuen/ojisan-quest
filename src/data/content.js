@@ -113,7 +113,7 @@ export const RPG_ENEMIES = {
     name: '転がるカバンの主',
     sprite: 'enemyRollingBagIdle',
     isBoss: true,
-    hp: 50, atk: 10, def: 6, spd: 8, exp: 18, gold: 30,
+    hp: 36, atk: 7, def: 3, spd: 7, exp: 18, gold: 30,
     flavorAppear: '転がるカバンの主が ゴロゴロと 道をふさいだ！',
     actions: [
       { name: '体当たり',   kind: 'attack', power: 1.2, msg: '転がるカバンの主が 突進してきた！' },
