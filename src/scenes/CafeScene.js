@@ -112,7 +112,7 @@ export class CafeScene extends Phaser.Scene {
     const flags = this.run.flags;
     this.msg.setText('だれに はなす？');
     const opts = [
-      { label: 'ママに話す', onSelect: () => this.toDialogue(this.getCafeTalkKey()) },
+      { label: 'ママに話す', onSelect: () => this.toDialogue(this.getCafeTalkKey(), { npc: { key: 'npcMama', flipX: false } }) },
       ...(flags.joined_kohai ? [{ label: '後輩鈴木くん', onSelect: () => this.toDialogue('kohai_cafe_1', { npc: { key: 'kohaiIdle', fallback: 'playerIdle', tint: 0xaaddff } }) }] : []),
       ...(flags.joined_ol    ? [{ label: 'OL田中さん',   onSelect: () => this.toDialogue('ol_cafe_1',   { npc: { key: 'olIdle',    fallback: 'playerIdle', tint: 0xffbbcc } }) }] : []),
       { label: '← もどる', onSelect: () => { this.msg.setText('ママ：どうする？'); this.rebuildMenu(this.mainOptions); } },

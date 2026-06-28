@@ -28,13 +28,13 @@ export class DialogueScene extends Phaser.Scene {
       this.cameras.main.setBackgroundColor('#0b0b10');
     }
 
-    // NPC スプライト（仲間合流シーンなど）：data.npc = { key, fallback?, tint? }
+    // NPC スプライト（仲間合流シーンなど）：data.npc = { key, fallback?, tint?, flipX? }
     if (data?.npc) {
       const sprKey = this.textures.exists(data.npc.key) ? data.npc.key : (data.npc.fallback ?? null);
       if (sprKey && this.textures.exists(sprKey)) {
-        const npc = this.add.image(GAME_W - 110, 388, sprKey).setOrigin(0.5, 1);
+        const npc = this.add.image(GAME_W / 2, 388, sprKey).setOrigin(0.5, 1);
         npc.setScale(220 / npc.height);
-        npc.setFlipX(true);
+        npc.setFlipX(data.npc.flipX ?? true);
         if (data.npc.tint) npc.setTint(data.npc.tint);
       }
     }
