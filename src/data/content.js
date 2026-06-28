@@ -39,6 +39,18 @@ export const SKILLS = {
   // Lv3 で習得（LEVEL_TABLE.learn）。強力な単発攻撃。
   heavySwing: { name: '本気の一振り', kind: 'attack', power: 2.4, cost: 6, target: 'enemy',
                 msg: '{user}は 本気で 振りかぶった！' },
+
+  // ── 後輩鈴木くん 固有 ──────────────────────────────────────
+  canThrow:   { name: '缶コーヒー投げ', kind: 'attack',    power: 1.3, cost: 2, target: 'enemy',
+                msg: '{user}は 頭の缶コーヒーを 投げつけた！' },
+  rallyCry:   { name: 'ファイト注入',   kind: 'healParty', amount: 10, cost: 5,
+                msg: '{user}は 全員に 気合いを 注入した！' },
+
+  // ── OL田中さん 固有 ────────────────────────────────────────
+  paperSlap:    { name: '書類でなぐ',     kind: 'attack',   power: 1.2, cost: 2, target: 'enemy',
+                  msg: '{user}は 書類を ビシッと 振り下ろした！' },
+  careSupport:  { name: '気遣いフォロー', kind: 'healAlly', amount: 18, cost: 4,
+                  msg: '{user}は 仲間を 気遣って ケアした。' },
 };
 
 // ── どうぐ（持ち物。count はランタイムで消費。price はショップ購入価格）────
@@ -228,7 +240,7 @@ export const COMPANIONS = {
     level: 1, exp: 0,
     hp: 26, maxHp: 26, mp: 6,  maxMp: 6,
     atk: 7, def: 4, spd: 8,
-    skills: ['shout'],
+    skills: ['shout', 'canThrow', 'rallyCry'],
   },
   ol: {
     name: 'OL田中さん', key: 'ol',
@@ -236,7 +248,7 @@ export const COMPANIONS = {
     level: 1, exp: 0,
     hp: 22, maxHp: 22, mp: 14, maxMp: 14,
     atk: 6, def: 4, spd: 9,
-    skills: ['coffee'],
+    skills: ['coffee', 'paperSlap', 'careSupport'],
   },
 };
 

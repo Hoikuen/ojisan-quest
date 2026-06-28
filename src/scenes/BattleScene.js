@@ -345,10 +345,22 @@ export class BattleScene extends Phaser.Scene {
       return {
         label: `${s.name}  ${s.cost}MP`, enabled: ok,
         onSelect: () => {
+          // healAlly はターゲット選択後にMP消費
+          if (s.kind === 'healAlly') {
+            const living = this.party.filter(p => p.hp > 0);
+            this.closeMenu();
+            if (living.length > 1) { this._openSkillAllyMenu(s, m, i, sprite); return; }
+            m.mp -= s.cost; this.refreshPartyStatus();
+            this._cmdQueue.push({ spd: m.spd, build: () =>
+              this.healSteps(m, s.amount, s.msg.replace('{user}', m.name), sprite) });
+            this._collectCmd(i + 1); return;
+          }
           m.mp -= s.cost;
           this.refreshPartyStatus();
           this._cmdQueue.push({ spd: m.spd, build: () => {
-            if (s.kind === 'heal') return this.healSteps(m, s.amount, s.msg.replace('{user}', m.name), sprite);
+            if (s.kind === 'heal')       return this.healSteps(m, s.amount, s.msg.replace('{user}', m.name), sprite);
+            if (s.kind === 'mpHeal')     return this.mpHealSteps(m, s.amount, s.msg.replace('{user}', m.name), sprite);
+            if (s.kind === 'healParty')  return this._healPartySteps(m, s);
             if (i === 0) this.playerActionPose = 'playerCast';
             return this.attackSteps(m, this.enemy, sprite, this.enemySprite,
               s.msg.replace('{user}', m.name), s.power);
@@ -359,6 +371,38 @@ export class BattleScene extends Phaser.Scene {
     });
     opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this._collectCmd(i); } });
     this.openMenu('どの とくぎを つかう？', opts);
+  }
+
+  _openSkillAllyMenu(s, m, memberIdx, casterSprite) {
+    const living = this.party.filter(p => p.hp > 0);
+    const opts = living.map(tgt => ({
+      label: tgt.name,
+      onSelect: () => {
+        m.mp -= s.cost; this.refreshPartyStatus();
+        const tgtSprite = this.partySprites[this.party.indexOf(tgt)];
+        this._cmdQueue.push({ spd: m.spd, build: () =>
+          this.healSteps(tgt, s.amount, s.msg.replace('{user}', m.name), tgtSprite) });
+        this.closeMenu(); this._collectCmd(memberIdx + 1);
+      },
+    }));
+    opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this._collectCmd(memberIdx); } });
+    this.openMenu('だれに つかう？', opts);
+  }
+
+  _healPartySteps(m, s) {
+    const living = this.party.filter(p => p.hp > 0);
+    const steps = [{
+      text: s.msg.replace('{user}', m.name), delay: 700,
+      fn: () => living.forEach(tgt => this.flashHeal(this.partySprites[this.party.indexOf(tgt)])),
+    }];
+    living.forEach(tgt => {
+      const healed = Math.min(tgt.maxHp, tgt.hp + s.amount) - tgt.hp;
+      steps.push({
+        text: `${tgt.name}の HPが ${healed} かいふくした！`, delay: 700,
+        fn: () => { tgt.hp += healed; this.refreshPartyStatus(); },
+      });
+    });
+    return steps;
   }
 
   _openItemMenu(memberIdx) {
