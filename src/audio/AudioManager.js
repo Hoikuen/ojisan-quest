@@ -43,6 +43,19 @@ class AudioManager {
     this._bgmTimer = null;
     this._currentBgm = null;
     this._bgmNodes = [];
+
+    // タブが裏側に回ったら止め、戻ったら再開
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (this._ctx) this._ctx.suspend();
+        clearTimeout(this._bgmTimer);
+        this._bgmTimer = null;
+      } else if (this._currentBgm) {
+        if (this._ctx) this._ctx.resume();
+        this._bgmNodes = [];
+        this._scheduleBGM(this._currentBgm);
+      }
+    });
   }
 
   get ctx() {
