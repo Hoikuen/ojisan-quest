@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
+import { SHOP } from '../data/content.js';
 import { getRun, saveRun } from '../state/run.js';
 
 // 拠点＝喫茶のりちゃん。初訪問は cafe_intro を再生→メニュー。
@@ -41,31 +42,19 @@ export class CafeScene extends Phaser.Scene {
       fontFamily: 'sans-serif', fontSize: '21px', color: COLORS.text, wordWrap: { width: w - 48 }, lineSpacing: 6,
     });
 
-    this.options = [
-      { label: 'はなす',  onSelect: () => this.toDialogue('cafe_talk') },
-      { label: 'ほじゅう', onSelect: () => this.rest() },
-      { label: 'セーブ',  onSelect: () => this.save() },
-      { label: '出発',    onSelect: () => this.depart() },
+    this.mainOptions = [
+      { label: 'はなす',    onSelect: () => this.toDialogue('cafe_talk') },
+      { label: 'ほじゅう',  onSelect: () => this.rest() },
+      { label: 'どうぐを買う', onSelect: () => this.openShop() },
+      { label: 'セーブ',    onSelect: () => this.save() },
+      { label: '出発',      onSelect: () => this.depart() },
     ];
 
-    const mx = 560, my = 446, mw = 212, mh = 140;
+    const mx = 560, my = 446, mw = 212, mh = 165;
     this.drawWindow(mx, my, mw, mh);
     this.items = [];
-    this.options.forEach((o, i) => {
-      const t = this.add.text(mx + 44, my + 18 + i * 28, o.label, {
-        fontFamily: 'sans-serif', fontSize: '19px', color: '#ffffff',
-      }).setInteractive({ useHandCursor: true });
-      t.on('pointerover', () => { this.idx = i; this.updateCursor(); });
-      t.on('pointerdown', () => this.confirm());
-      this.items.push(t);
-    });
-
-    this.idx = 0;
-    this.cursorX = mx + 18;
-    this.cursor = this.textures.exists('uiCursor')
-      ? this.add.image(0, 0, 'uiCursor').setOrigin(0, 0.5).setDisplaySize(18, 18)
-      : this.add.text(0, 0, '▶', { fontFamily: 'sans-serif', fontSize: '19px', color: '#ffe24a' }).setOrigin(0, 0.5);
-    this.updateCursor();
+    this.cursor = null;
+    this.rebuildMenu(this.mainOptions);
 
     const kb = this.input.keyboard;
     kb.on('keydown-UP', () => { this.idx = (this.idx + this.options.length - 1) % this.options.length; this.updateCursor(); });
@@ -74,18 +63,77 @@ export class CafeScene extends Phaser.Scene {
     kb.on('keydown-SPACE', () => this.confirm());
   }
 
-  updateCursor() { const t = this.items[this.idx]; if (t) this.cursor.setPosition(this.cursorX, t.y + 10); }
-  confirm() { if (this._busy) return; this.options[this.idx].onSelect(); }
+  updateCursor() {
+    const t = this.items[this.idx];
+    if (t && this.cursor) this.cursor.setPosition(this.cursorX, t.y + 10);
+  }
+  confirm() { if (this._busy) return; this.options[this.idx]?.onSelect(); }
+
+  rebuildMenu(newOptions) {
+    this.options = newOptions;
+    this.items.forEach((t) => t.destroy()); this.items = [];
+    if (this.cursor) { this.cursor.destroy(); this.cursor = null; }
+
+    const mx = 560, my = 446;
+    this.options.forEach((o, i) => {
+      const t = this.add.text(mx + 44, my + 18 + i * 27, o.label, {
+        fontFamily: 'sans-serif', fontSize: '17px',
+        color: o.enabled === false ? '#666a80' : '#ffffff',
+      }).setInteractive({ useHandCursor: o.enabled !== false });
+      t.on('pointerover', () => {
+        if (o.enabled !== false) { this.idx = i; this.updateCursor(); }
+      });
+      t.on('pointerdown', () => { if (o.enabled !== false) this.confirm(); });
+      this.items.push(t);
+    });
+
+    this.idx = this.options.findIndex((o) => o.enabled !== false);
+    if (this.idx < 0) this.idx = 0;
+    this.cursorX = mx + 18;
+    this.cursor = this.textures.exists('uiCursor')
+      ? this.add.image(0, 0, 'uiCursor').setOrigin(0, 0.5).setDisplaySize(18, 18)
+      : this.add.text(0, 0, '▶', { fontFamily: 'sans-serif', fontSize: '19px', color: '#ffe24a' }).setOrigin(0, 0.5);
+    this.updateCursor();
+  }
 
   toDialogue(key) { this.scene.start('DialogueScene', { key, next: 'CafeScene', bg: 'bgCafe' }); }
 
   rest() {
-    const p = this.run.player;
-    p.hp = p.maxHp; p.mp = p.maxMp;
-    this.flash('ママは あつい コーヒーを いれてくれた。\nHPとMPが ぜんかい した！');
+    const party = this.run.party ?? [this.run.player];
+    for (const m of party) { m.hp = m.maxHp; m.mp = m.maxMp; }
+    this.flash('ママは あつい コーヒーを いれてくれた。\nパーティの HPとMPが ぜんかい した！');
   }
 
   save() { this.flash(saveRun() ? 'ここまでを セーブした。' : 'セーブに しっぱいした…'); }
+
+  openShop() {
+    const gold = this.run.player.gold ?? 0;
+    this.msg.setText(`もちきん: ${gold}G\nなにを かいますか？`);
+    const opts = SHOP.map(({ itemKey, price }) => {
+      const it = this.run.player.inventory[itemKey];
+      return {
+        label: `${it.name}  ${price}G`,
+        enabled: gold >= price,
+        onSelect: () => this.buyItem(itemKey, price),
+      };
+    });
+    opts.push({ label: '← もどる', onSelect: () => this.returnFromShop() });
+    this.rebuildMenu(opts);
+  }
+
+  returnFromShop() {
+    this.msg.setText('ママ：どうする？');
+    this.rebuildMenu(this.mainOptions);
+  }
+
+  buyItem(itemKey, price) {
+    const p = this.run.player;
+    if ((p.gold ?? 0) < price) return;
+    p.gold -= price;
+    p.inventory[itemKey].count += 1;
+    this.msg.setText(`かいました！\nのこりきん: ${p.gold}G`);
+    this.time.delayedCall(1000, () => { if (!this._busy) this.openShop(); });
+  }
 
   depart() {
     this._busy = true;

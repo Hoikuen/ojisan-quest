@@ -23,11 +23,11 @@ export const PLAYER = {
 // level1 は PLAYER の開始値と一致させる。expToReach＝そのレベルに上がる累積EXPしきい値。
 // レベルアップ時はステータスをこの行の値に更新し、HP/MPは全回復（王道）。learn があればとくぎ習得。
 export const LEVEL_TABLE = [
-  { level: 1, expToReach: 0,  maxHp: 30, maxMp: 8,  atk: 8,  def: 5,  spd: 6 },
-  { level: 2, expToReach: 8,  maxHp: 38, maxMp: 10, atk: 10, def: 6,  spd: 7 },
-  { level: 3, expToReach: 22, maxHp: 47, maxMp: 13, atk: 12, def: 7,  spd: 8, learn: 'heavySwing' },
-  { level: 4, expToReach: 44, maxHp: 57, maxMp: 16, atk: 15, def: 9,  spd: 9 },
-  { level: 5, expToReach: 76, maxHp: 70, maxMp: 20, atk: 18, def: 11, spd: 10 },
+  { level: 1, expToReach: 0,   maxHp: 30, maxMp: 8,  atk: 8,  def: 5,  spd: 6 },
+  { level: 2, expToReach: 30,  maxHp: 38, maxMp: 10, atk: 10, def: 6,  spd: 7 },
+  { level: 3, expToReach: 75,  maxHp: 47, maxMp: 13, atk: 12, def: 7,  spd: 8, learn: 'heavySwing' },
+  { level: 4, expToReach: 150, maxHp: 57, maxMp: 16, atk: 15, def: 9,  spd: 9 },
+  { level: 5, expToReach: 260, maxHp: 70, maxMp: 20, atk: 18, def: 11, spd: 10 },
 ];
 
 // ── とくぎ（kind＋params。エンジンは kind を見て分岐）────────────
@@ -41,11 +41,22 @@ export const SKILLS = {
                 msg: '{user}は 本気で 振りかぶった！' },
 };
 
-// ── どうぐ（持ち物。count はランタイムで消費）────────────────────
+// ── どうぐ（持ち物。count はランタイムで消費。price はショップ購入価格）────
 export const ITEMS = {
-  drink: { name: '栄養ドリンク', kind: 'heal', amount: 20, count: 3,
-           msg: '{user}は 栄養ドリンクを 飲んだ！' },
+  drink:   { name: '栄養ドリンク', kind: 'heal',   amount: 20, count: 3, price: 40,
+             msg: '{user}は 栄養ドリンクを 飲んだ！' },
+  hiDrink: { name: '高級エナジー', kind: 'heal',   amount: 40, count: 0, price: 80,
+             msg: '{user}は 高級エナジーを 飲んだ！' },
+  mpDrink: { name: 'MPリカバリー', kind: 'mpHeal', amount: 10, count: 0, price: 35,
+             msg: '{user}は MPリカバリーを 飲んだ。' },
 };
+
+// ── ショップ品リスト（拠点で購入できる順番・ITEMS のキーを参照）──
+export const SHOP = [
+  { itemKey: 'drink',   price: 40 },
+  { itemKey: 'hiDrink', price: 80 },
+  { itemKey: 'mpDrink', price: 35 },
+];
 
 // ── 敵（hp/atk/def/spd/exp/gold/sprite/skills）──────────────────
 // skills は SKILLS のキー or 簡易インライン定義。最小ループでは素の攻撃のみ。
@@ -203,6 +214,27 @@ export const RPG_ENEMIES = {
       { name: '残業命令',     kind: 'attack', power: 1.7, msg: '社長は 残業命令を 下した！' },
       { name: 'やりがい搾取', kind: 'attack', power: 1.4, msg: '社長は やりがいを 搾取してきた！' },
     ],
+  },
+};
+
+// ── 仲間（プレースホルダースプライト。専用イラストは発注予定）──────
+// key フィールドはショップや join チェックの識別子として使う。
+export const COMPANIONS = {
+  kohai: {
+    name: '後輩', key: 'kohai',
+    sprite: 'playerIdle', hurtSprite: 'playerHurt',
+    level: 1, exp: 0,
+    hp: 26, maxHp: 26, mp: 6,  maxMp: 6,
+    atk: 7, def: 4, spd: 8,
+    skills: ['shout'],
+  },
+  ol: {
+    name: 'OL田中さん', key: 'ol',
+    sprite: 'playerIdle', hurtSprite: 'playerHurt',
+    level: 1, exp: 0,
+    hp: 22, maxHp: 22, mp: 14, maxMp: 14,
+    atk: 6, def: 4, spd: 9,
+    skills: ['coffee'],
   },
 };
 

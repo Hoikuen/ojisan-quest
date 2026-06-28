@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS, LAYOUT } from '../constants.js';
-import { getRun, currentFloor, isBossReady, hasNextFloor, pickEncounter } from '../state/run.js';
+import { getRun, currentFloor, isBossReady, hasNextFloor, pickEncounter, addCompanion } from '../state/run.js';
 
 // 軽量な通路フロア。おじさんが右へ進み、エンカウントで戦闘へ／奥のボス扉で階ボス。
 // 進行：steps 回の通常エンカウントを越えるとボス扉が開く。階ボス撃破で次階 or 脱出。
@@ -197,16 +197,42 @@ export class FloorScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('CafeScene'));
   }
 
-  // 階クリア → 次階 or 全クリア（脱出）
+  // 階クリア → 仲間合流チェック → 次階 or 全クリア
   clearFloor() {
+    const clearedId = this.floor.id;
+    const joinKey = this.getCompanionJoin(clearedId);
+
+    if (joinKey && !this.run.flags['joined_' + joinKey]) {
+      this.run.flags['joined_' + joinKey] = true;
+      addCompanion(joinKey);
+      // フロア先送りしてから合流会話 → 次フロアの冒頭へ
+      if (hasNextFloor()) {
+        this.run.floorIndex += 1;
+        this.run.stepInFloor = 0;
+      }
+      const nextF = currentFloor();
+      this.scene.start('DialogueScene', {
+        key: joinKey + '_join',
+        next: 'FloorScene',
+        bg: nextF ? nextF.bg : this.floor.bg,
+      });
+      return;
+    }
+
     if (hasNextFloor()) {
       this.run.floorIndex += 1;
       this.run.stepInFloor = 0;
       this.scene.start('FloorScene');
     } else {
-      // 現状の最終到達点 → 脱出（ノーマルエンディング）。フロア追加で本来の屋上へ。
       this.scene.start('ResultScene', { outcome: 'win' });
     }
+  }
+
+  // ボスを倒した階 ID → 合流する仲間キー（null なら合流なし）
+  getCompanionJoin(floorId) {
+    if (floorId === 'b1') return 'kohai';
+    if (floorId === 'f1') return 'ol';
+    return null;
   }
 
   drawWindow(x, y, w, h) {

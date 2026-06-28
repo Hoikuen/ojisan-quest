@@ -1,17 +1,19 @@
 // ラン状態（1フロアの脱出ラン）。BattleScene は毎戦 restart されるが、
 // プレイヤーの hp/mp/level/exp/持ち物と進行位置はここで保持して戦闘をまたいで継続する。
 // エンジンは薄く・状態はここ／内容は content.js（RESKIN方針）。
-import { PLAYER, ITEMS, LEVEL_TABLE, FLOORS } from '../data/content.js';
+import { PLAYER, ITEMS, LEVEL_TABLE, FLOORS, COMPANIONS } from '../data/content.js';
 
 let state = null;
 
 const SAVE_KEY = 'ojisanQuest.save';
-const SAVE_VERSION = 2; // run の形を変えたら上げる（旧セーブは破棄＝MVP方針）
+const SAVE_VERSION = 3; // party 配列追加でバージョンアップ（旧セーブは破棄）
 
 // 新しいランを開始（タイトルの「はじめる」で呼ぶ）。
 export function startRun() {
+  const player = { ...structuredClone(PLAYER), inventory: structuredClone(ITEMS) };
   state = {
-    player: { ...structuredClone(PLAYER), inventory: structuredClone(ITEMS) },
+    player,
+    party: [player],  // プレイヤーを先頭にした戦闘パーティ（仲間合流で push）
     floorIndex: 0,    // FLOORS の現在階
     stepInFloor: 0,   // その階で倒した通常エンカウント数
     pendingEnemy: null,   // FloorScene が戦闘に渡す敵キー
@@ -20,6 +22,14 @@ export function startRun() {
     flags: {},        // 進行/解放/収集/選択（cafeVisited 等）
   };
   return state;
+}
+
+// 仲間を party に追加（同じ key の重複追加はしない）。
+export function addCompanion(key) {
+  const def = COMPANIONS[key];
+  if (!def || !state) return;
+  if (state.party.some((m) => m.key === key)) return;
+  state.party.push(structuredClone(def));
 }
 
 export function getRun() { return state; }
@@ -61,6 +71,9 @@ export function loadRun() {
     if (!data || data.saveVersion !== SAVE_VERSION || !data.state) return null;
     state = data.state;
     if (!state.flags) state.flags = {};
+    // JSON round-trip で player と party[0] が別オブジェクトになるので再リンク。
+    if (!state.party) { state.party = [state.player]; }
+    else { state.party[0] = state.player; }
     return state;
   } catch (e) { return null; }
 }
