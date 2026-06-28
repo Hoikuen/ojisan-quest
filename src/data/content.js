@@ -77,6 +77,7 @@ export const RPG_ENEMIES = {
     name: '果物メガネ女子',
     sprite: 'enemyFruitIdle',
     hurtSprite: 'enemyFruitHurt',
+    flipX: true,
     isBoss: true,
     hp: 90, atk: 16, def: 8, spd: 9, exp: 34, gold: 60,
     flavorAppear: '主任——果物メガネ女子が 立ちふさがった！',
@@ -90,6 +91,7 @@ export const RPG_ENEMIES = {
     name: '大仏豚ぶちょう',
     sprite: 'enemyBossIdle',
     hurtSprite: 'enemyBossHurt',
+    flipX: true,
     isBoss: true,
     hp: 95, atk: 16, def: 9, spd: 6, exp: 40, gold: 80,
     flavorAppear: 'このフロアの主——大仏豚ぶちょうが 立ちはだかった！',
@@ -221,7 +223,7 @@ export const RPG_ENEMIES = {
 // key フィールドはショップや join チェックの識別子として使う。
 export const COMPANIONS = {
   kohai: {
-    name: '後輩', key: 'kohai',
+    name: '鈴木くん', key: 'kohai',
     sprite: 'kohaiIdle', hurtSprite: 'kohaiHurt', // 発注済みスプライト到着後に差し替え（未着時は playerIdle にフォールバック）
     level: 1, exp: 0,
     hp: 26, maxHp: 26, mp: 6,  maxMp: 6,

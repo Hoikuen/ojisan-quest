@@ -75,7 +75,7 @@ export class BattleScene extends Phaser.Scene {
            { x: 155, y: cMaxY,          scale: 0.85 }]
         : [{ x: 270, y: LAYOUT.playerY, scale: 1    },
            { x: 185, y: cMaxY,          scale: 0.82 },
-           { x: 110, y: cMaxY - 22,     scale: 0.68 }];
+           { x: 110, y: cMaxY - 22,     scale: 0.82 }];
 
     const TINT_COLORS = { kohai: 0xaaddff, ol: 0xffbbcc };
 
@@ -86,7 +86,8 @@ export class BattleScene extends Phaser.Scene {
       const sprite = this.add.image(pos.x, pos.y, sprKey).setOrigin(0.5, 1);
       this.scaleToHeight(sprite, LAYOUT.playerH * pos.scale);
       sprite._homeX = pos.x;
-      sprite._baseScale = sprite.scaleX; // ポーズ差替時にサイズを維持するために保存
+      sprite._baseScale = sprite.scaleX;
+      if (m.hp <= 0) sprite.setVisible(false);
 
       if (i > 0) {
         // 専用スプライトがない間は色で区別（専用スプライト到着後は tint 不要になる）
@@ -103,7 +104,8 @@ export class BattleScene extends Phaser.Scene {
       .setOrigin(0.5, 1);
     this.enemySprite._homeX = LAYOUT.enemyX;
     this.scaleToHeight(this.enemySprite, LAYOUT.enemyH);
-    this.enemySprite._baseScale = this.enemySprite.scaleX; // defeated 差替時に同スケールを保持
+    this.enemySprite._baseScale = this.enemySprite.scaleX;
+    if (this.enemy.flipX) this.enemySprite.setFlipX(true); // defeated 差替時に同スケールを保持
   }
 
   scaleToHeight(img, h) { img.setScale(h / img.height); }
@@ -303,73 +305,102 @@ export class BattleScene extends Phaser.Scene {
     kb.on('keydown-SPACE', () => this.confirmMenu());
   }
 
-  // ── コマンドフェーズ ───────────────────────────────────────
+  // ── コマンドフェーズ（全メンバー順番に入力）──────────────────
   beginCommandPhase() {
     if (this.battleOver) return;
     this.busy = false;
-    this.openMenu(`${this.player.name}は どうする？`, [
-      { label: 'たたかう', icon: 'iconAttack', onSelect: () => this.chooseAttack() },
-      { label: 'とくぎ',   icon: 'iconSkill',  onSelect: () => this.chooseSkill() },
-      { label: 'どうぐ',   icon: 'iconItem',   onSelect: () => this.chooseItem() },
-      { label: 'にげる',   icon: 'iconFlee',   onSelect: () => this.chooseFlee() },
+    this._cmdQueue = [];
+    this._collectCmd(0);
+  }
+
+  _collectCmd(i) {
+    while (i < this.party.length && this.party[i].hp <= 0) i++;
+    if (i >= this.party.length) {
+      this.busy = true;
+      const actors = [...this._cmdQueue, this.enemyActor()];
+      actors.sort((a, b) => b.spd - a.spd);
+      this.resolveActors(actors, 0);
+      return;
+    }
+    const m = this.party[i];
+    const sprite = this.partySprites[i];
+    this.openMenu(`${m.name}は どうする？`, [
+      { label: 'たたかう', icon: 'iconAttack', onSelect: () => {
+          this._cmdQueue.push({ spd: m.spd, build: () => {
+            if (i === 0) this.playerActionPose = 'playerAttack';
+            return this.attackSteps(m, this.enemy, sprite, this.enemySprite, `${m.name}の こうげき！`);
+          }});
+          this.closeMenu(); this._collectCmd(i + 1);
+      }},
+      { label: 'とくぎ', icon: 'iconSkill', onSelect: () => this._openSkillMenu(m, i, sprite) },
+      { label: 'どうぐ', icon: 'iconItem',  onSelect: () => this._openItemMenu(i) },
+      ...(i === 0 ? [{ label: 'にげる', icon: 'iconFlee', onSelect: () => this.chooseFlee() }] : []),
     ]);
   }
 
-  chooseAttack() {
-    this.closeMenu();
-    this.playerActionPose = 'playerAttack';
-    this.resolveRound(() => this.attackSteps(
-      this.player, this.enemy, this.playerSprite, this.enemySprite,
-      `${this.player.name}の こうげき！`
-    ));
-  }
-
-  chooseSkill() {
-    const opts = this.player.skills.map((key) => {
+  _openSkillMenu(m, i, sprite) {
+    const opts = m.skills.map((key) => {
       const s = SKILLS[key];
-      const ok = this.player.mp >= s.cost;
+      const ok = m.mp >= s.cost;
       return {
-        label: `${s.name} (${s.cost})`, enabled: ok,
-        onSelect: () => { this.closeMenu(); this.useSkill(key); },
+        label: `${s.name}  ${s.cost}MP`, enabled: ok,
+        onSelect: () => {
+          m.mp -= s.cost;
+          this.refreshPartyStatus();
+          this._cmdQueue.push({ spd: m.spd, build: () => {
+            if (s.kind === 'heal') return this.healSteps(m, s.amount, s.msg.replace('{user}', m.name), sprite);
+            if (i === 0) this.playerActionPose = 'playerCast';
+            return this.attackSteps(m, this.enemy, sprite, this.enemySprite,
+              s.msg.replace('{user}', m.name), s.power);
+          }});
+          this.closeMenu(); this._collectCmd(i + 1);
+        },
       };
     });
-    opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this.beginCommandPhase(); } });
+    opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this._collectCmd(i); } });
     this.openMenu('どの とくぎを つかう？', opts);
   }
 
-  useSkill(key) {
-    const s = SKILLS[key];
-    this.player.mp -= s.cost;
-    this.refreshPartyStatus();
-    if (s.kind === 'heal') {
-      this.resolveRound(() => this.healSteps(this.player, s.amount, s.msg.replace('{user}', this.player.name)));
-    } else {
-      this.playerActionPose = 'playerCast';
-      this.resolveRound(() => this.attackSteps(
-        this.player, this.enemy, this.playerSprite, this.enemySprite,
-        s.msg.replace('{user}', this.player.name), s.power
-      ));
-    }
-  }
-
-  chooseItem() {
+  _openItemMenu(memberIdx) {
     const inv = this.player.inventory;
     const opts = Object.entries(inv).map(([key, it]) => ({
       label: `${it.name} (${it.count})`, enabled: it.count > 0,
-      onSelect: () => { this.closeMenu(); this.useItem(key); },
+      onSelect: () => {
+        this.closeMenu();
+        const living = this.party.filter((m) => m.hp > 0);
+        if (living.length > 1 && (it.kind === 'heal' || it.kind === 'mpHeal')) {
+          this._openItemTargetMenu(key, it, memberIdx);
+        } else {
+          this._queueItem(key, it, this.player, this.playerSprite, memberIdx);
+        }
+      },
     }));
-    opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this.beginCommandPhase(); } });
+    opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this._collectCmd(memberIdx); } });
     this.openMenu('どの どうぐを つかう？', opts);
   }
 
-  useItem(key) {
-    const it = this.player.inventory[key];
+  _openItemTargetMenu(key, it, memberIdx) {
+    const opts = this.party
+      .filter((m) => m.hp > 0)
+      .map((m) => {
+        const tgtSprite = this.partySprites[this.party.indexOf(m)];
+        return {
+          label: `${m.name}  HP:${m.hp}/${m.maxHp}`,
+          onSelect: () => { this.closeMenu(); this._queueItem(key, it, m, tgtSprite, memberIdx); },
+        };
+      });
+    opts.push({ label: '← もどる', onSelect: () => { this.closeMenu(); this._openItemMenu(memberIdx); } });
+    this.openMenu('だれに つかう？', opts);
+  }
+
+  _queueItem(key, it, target, tgtSprite, memberIdx) {
     it.count -= 1;
-    if (it.kind === 'mpHeal') {
-      this.resolveRound(() => this.mpHealSteps(this.player, it.amount, it.msg.replace('{user}', this.player.name)));
-    } else {
-      this.resolveRound(() => this.healSteps(this.player, it.amount, it.msg.replace('{user}', this.player.name)));
-    }
+    const userSpd = this.party[memberIdx]?.spd ?? this.player.spd;
+    this._cmdQueue.push({ spd: userSpd, build: () => {
+      if (it.kind === 'mpHeal') return this.mpHealSteps(target, it.amount, it.msg.replace('{user}', target.name), tgtSprite);
+      return this.healSteps(target, it.amount, it.msg.replace('{user}', target.name), tgtSprite);
+    }});
+    this._collectCmd(memberIdx + 1);
   }
 
   chooseFlee() {
@@ -387,25 +418,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   // ── ターン解決（素早さ降順）───────────────────────────────
-  resolveRound(playerStepBuilder) {
-    this.busy = true;
-    const actors = [
-      { spd: this.player.spd, build: playerStepBuilder },
-      // 生存している仲間は自動行動
-      ...this.party
-        .filter((m) => m !== this.player && m.hp > 0)
-        .map((m) => ({ spd: m.spd, build: () => this.companionAutoSteps(m) })),
-      this.enemyActor(),
-    ];
-    actors.sort((a, b) => b.spd - a.spd);
-    this.resolveActors(actors, 0);
-  }
-
   enemyActor() {
     return {
       spd: this.enemy.spd,
       build: () => {
-        // 生存パーティメンバーをランダムに狙う
         const living = this.party.filter((m) => m.hp > 0);
         const target = living.length > 1 ? Phaser.Utils.Array.GetRandom(living) : this.player;
         const tgtSprite = this.partySprites[this.party.indexOf(target)] ?? this.playerSprite;
@@ -416,24 +432,6 @@ export class BattleScene extends Phaser.Scene {
         );
       },
     };
-  }
-
-  // 仲間の自動行動：HP < 50% かつ回復スキルあり → 回復。それ以外 → 通常攻撃。
-  companionAutoSteps(companion) {
-    const idx = this.party.indexOf(companion);
-    const sprite = this.partySprites[idx] ?? this.playerSprite;
-    if (companion.hp < companion.maxHp * 0.5) {
-      const healKey = companion.skills.find((k) => SKILLS[k]?.kind === 'heal');
-      if (healKey && companion.mp >= SKILLS[healKey].cost) {
-        companion.mp -= SKILLS[healKey].cost;
-        const s = SKILLS[healKey];
-        return this.healSteps(companion, s.amount, s.msg.replace('{user}', companion.name), sprite);
-      }
-    }
-    return this.attackSteps(
-      companion, this.enemy, sprite, this.enemySprite,
-      `${companion.name}の こうげき！`
-    );
   }
 
   resolveActors(actors, i) {
@@ -482,12 +480,16 @@ export class BattleScene extends Phaser.Scene {
     ];
   }
 
-  mpHealSteps(target, amount, msg) {
+  mpHealSteps(target, amount, msg, sprite = null) {
+    const actualSprite = sprite ?? this.playerSprite;
     const healed = Math.min(target.maxMp, target.mp + amount) - target.mp;
     return [
       {
         text: msg, delay: 650,
-        fn: () => { this.flashHeal(this.playerSprite); this.showPlayerPose('playerDrink', 750); },
+        fn: () => {
+          this.flashHeal(actualSprite);
+          if (actualSprite === this.playerSprite) this.showPlayerPose('playerDrink', 750);
+        },
       },
       {
         text: `${target.name}の MPが ${healed} かいふくした！`, delay: 850,
@@ -507,6 +509,10 @@ export class BattleScene extends Phaser.Scene {
     this.popDamage(sprite, dmg);
     this.flashHurt(target, sprite, isPlayer);
     this.cameras.main.shake(120, 0.006);
+    if (isPlayer && target.hp <= 0 && target !== this.player) {
+      const idx = this.party.indexOf(target);
+      if (idx > 0) this.time.delayedCall(400, () => this.partySprites[idx]?.setVisible(false));
+    }
   }
 
   // ── 演出 ───────────────────────────────────────────────────
@@ -573,11 +579,13 @@ export class BattleScene extends Phaser.Scene {
     this.closeMenu();
     if (this._poseTimer) this._poseTimer.remove();
 
-    // 生存メンバー全員に勝利ポーズ
+    // おじさんのみ勝利ポーズ。仲間は idle を維持。
     this.party.forEach((m, i) => {
-      if (m.hp > 0 && this.textures.exists('playerVictory')) {
-        const spr = this.partySprites[i];
-        spr.clearTint().setTexture('playerVictory');
+      if (m.hp <= 0) return;
+      const spr = this.partySprites[i];
+      spr.clearTint();
+      if (i === 0 && this.textures.exists('playerVictory')) {
+        spr.setTexture('playerVictory');
         this.scaleToHeight(spr, LAYOUT.playerH);
       }
     });
@@ -625,9 +633,10 @@ export class BattleScene extends Phaser.Scene {
     audio.playSE('gameOver');
     this.closeMenu();
 
-    // 全滅演出
+    // 全滅演出（途中で非表示になった仲間も表示して倒れさせる）
     this.party.forEach((m, i) => {
       const spr = this.partySprites[i];
+      spr.setVisible(true);
       if (m.hurtSprite && this.textures.exists(m.hurtSprite)) {
         spr.clearTint().setTexture(m.hurtSprite);
         this.scaleToHeight(spr, LAYOUT.playerH);

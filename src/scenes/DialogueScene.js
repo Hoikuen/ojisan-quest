@@ -34,6 +34,7 @@ export class DialogueScene extends Phaser.Scene {
       if (sprKey && this.textures.exists(sprKey)) {
         const npc = this.add.image(GAME_W - 110, 388, sprKey).setOrigin(0.5, 1);
         npc.setScale(220 / npc.height);
+        npc.setFlipX(true);
         if (data.npc.tint) npc.setTint(data.npc.tint);
       }
     }
