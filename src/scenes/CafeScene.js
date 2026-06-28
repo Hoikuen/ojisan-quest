@@ -18,7 +18,7 @@ export class CafeScene extends Phaser.Scene {
       this.cameras.main.setBackgroundColor('#241a16');
     }
     if (this.textures.exists('npcMama')) {
-      const m = this.add.image(450, 416, 'npcMama').setOrigin(0.5, 1);
+      const m = this.add.image(390, 430, 'npcMama').setOrigin(0.5, 1);
       m.setScale(278 / m.height);
     }
     this.add.text(24, 18, '喫茶のりちゃん', {

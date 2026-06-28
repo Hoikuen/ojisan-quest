@@ -44,11 +44,19 @@ export class BattleScene extends Phaser.Scene {
 
   // ── 画面構築 ───────────────────────────────────────────────
   buildBackground() {
-    const g = this.add.graphics();
-    g.fillGradientStyle(COLORS.bgTop, COLORS.bgTop, COLORS.bgBottom, COLORS.bgBottom, 1);
-    g.fillRect(0, 0, GAME_W, GAME_H);
-    g.fillStyle(0x1a1836, 0.55).fillRect(0, 310, GAME_W, 110);
-    g.fillStyle(0x000000, 0.3).fillRect(0, 430, GAME_W, GAME_H - 430);
+    if (this.textures.exists('battleOffice')) {
+      this.add.image(0, 0, 'battleOffice').setOrigin(0, 0).setDisplaySize(GAME_W, GAME_H);
+      const g = this.add.graphics();
+      g.fillStyle(0x000000, 0.32).fillRect(0, 0, GAME_W, GAME_H);
+      g.fillStyle(0x1a1836, 0.50).fillRect(0, 310, GAME_W, 120);
+      g.fillStyle(0x000000, 0.35).fillRect(0, 430, GAME_W, GAME_H - 430);
+    } else {
+      const g = this.add.graphics();
+      g.fillGradientStyle(COLORS.bgTop, COLORS.bgTop, COLORS.bgBottom, COLORS.bgBottom, 1);
+      g.fillRect(0, 0, GAME_W, GAME_H);
+      g.fillStyle(0x1a1836, 0.55).fillRect(0, 310, GAME_W, 110);
+      g.fillStyle(0x000000, 0.3).fillRect(0, 430, GAME_W, GAME_H - 430);
+    }
   }
 
   buildSprites() {
