@@ -206,15 +206,15 @@ export class FloorScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('CafeScene'));
   }
 
-  // 階クリア → 仲間合流チェック → 次階 or 全クリア
+  // 階クリア → 仲間合流チェック → ポストボス会話 → 次階 or エンディング
   clearFloor() {
     const clearedId = this.floor.id;
     const joinKey = this.getCompanionJoin(clearedId);
 
+    // 仲間合流（B1→後輩 / F1→OL田中さん）
     if (joinKey && !this.run.flags['joined_' + joinKey]) {
       this.run.flags['joined_' + joinKey] = true;
       addCompanion(joinKey);
-      // フロア先送りしてから合流会話 → 次フロアの冒頭へ
       if (hasNextFloor()) {
         this.run.floorIndex += 1;
         this.run.stepInFloor = 0;
@@ -228,12 +228,35 @@ export class FloorScene extends Phaser.Scene {
       return;
     }
 
+    // ボスクリア後の会話（office/exec）
+    const postKey = this.getPostBossStory(clearedId);
+    if (postKey && !this.run.flags['postBoss_' + clearedId]) {
+      this.run.flags['postBoss_' + clearedId] = true;
+      const currentBg = this.floor.bg;
+      if (hasNextFloor()) {
+        this.run.floorIndex += 1;
+        this.run.stepInFloor = 0;
+      }
+      this.scene.start('DialogueScene', {
+        key: postKey,
+        next: 'FloorScene',
+        bg: currentBg,
+      });
+      return;
+    }
+
+    // 次フロアへ or エンディング会話 → リザルト
     if (hasNextFloor()) {
       this.run.floorIndex += 1;
       this.run.stepInFloor = 0;
       this.scene.start('FloorScene');
     } else {
-      this.scene.start('ResultScene', { outcome: 'win' });
+      this.scene.start('DialogueScene', {
+        key: 'president_defeated',
+        next: 'ResultScene',
+        nextData: { outcome: 'win' },
+        bg: 'bgPresidentRoom',
+      });
     }
   }
 
@@ -241,6 +264,13 @@ export class FloorScene extends Phaser.Scene {
   getCompanionJoin(floorId) {
     if (floorId === 'b1') return 'kohai';
     if (floorId === 'f1') return 'ol';
+    return null;
+  }
+
+  // ボス撃破後の会話キー（office/exec のみ）
+  getPostBossStory(floorId) {
+    if (floorId === 'office') return 'office_boss_clear';
+    if (floorId === 'exec') return 'exec_boss_clear';
     return null;
   }
 
