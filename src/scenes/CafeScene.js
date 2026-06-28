@@ -43,15 +43,18 @@ export class CafeScene extends Phaser.Scene {
       fontFamily: 'sans-serif', fontSize: '21px', color: COLORS.text, wordWrap: { width: w - 48 }, lineSpacing: 6,
     });
 
+    const flags = this.run.flags;
     this.mainOptions = [
-      { label: 'はなす',    onSelect: () => this.toDialogue('cafe_talk') },
+      { label: 'はなす',    onSelect: () => this.toDialogue(this.getCafeTalkKey()) },
+      ...(flags.joined_kohai ? [{ label: '後輩鈴木くんに話す', onSelect: () => this.toDialogue('kohai_cafe_1', { npc: { key: 'kohaiIdle', fallback: 'playerIdle', tint: 0xaaddff } }) }] : []),
+      ...(flags.joined_ol    ? [{ label: 'OL田中さんに話す',   onSelect: () => this.toDialogue('ol_cafe_1',   { npc: { key: 'olIdle',    fallback: 'playerIdle', tint: 0xffbbcc } }) }] : []),
       { label: 'ほじゅう',  onSelect: () => this.rest() },
       { label: 'どうぐを買う', onSelect: () => this.openShop() },
       { label: 'セーブ',    onSelect: () => this.save() },
       { label: '出発',      onSelect: () => this.depart() },
     ];
 
-    const mx = 560, my = 446, mw = 212, mh = 165;
+    const mx = 560, my = 446, mw = 212, mh = 240;
     this.drawWindow(mx, my, mw, mh);
     this.items = [];
     this.cursor = null;
@@ -99,7 +102,16 @@ export class CafeScene extends Phaser.Scene {
     this.updateCursor();
   }
 
-  toDialogue(key) { this.scene.start('DialogueScene', { key, next: 'CafeScene', bg: 'bgCafe' }); }
+  getCafeTalkKey() {
+    const flags = this.run.flags;
+    const floor = this.run.floorIndex ?? 0;
+    if (floor >= 3) return 'cafe_talk_late';
+    if (flags.joined_ol)    return 'cafe_talk_ol';
+    if (flags.joined_kohai) return 'cafe_talk_kohai';
+    return 'cafe_talk_b1';
+  }
+
+  toDialogue(key, extras = {}) { this.scene.start('DialogueScene', { key, next: 'CafeScene', bg: 'bgCafe', ...extras }); }
 
   rest() {
     const party = this.run.party ?? [this.run.player];

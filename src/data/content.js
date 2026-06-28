@@ -261,24 +261,28 @@ export const FLOORS = [
     encounters: [{ enemy: 'caterpillar', w: 3 }, { enemy: 'paperTower', w: 2 }],
     boss: 'rollingBagLord',
     introStory: 'b1_intro',
+    preBossStory: 'pre_boss_b1',
   },
   {
     id: 'f1', name: '1F ロビー受付', bg: 'bgEntranceNight', steps: 3,
     encounters: [{ enemy: 'vendingSpirit', w: 3 }, { enemy: 'lastTrainZombie', w: 3 }],
     boss: 'receptionLord',
     introStory: 'f1_intro',
+    preBossStory: 'pre_boss_f1',
   },
   {
     id: 'office', name: '中層 オフィス', bg: 'bgOfficeNight', steps: 4,
     encounters: [{ enemy: 'copierGhost', w: 2 }, { enemy: 'phoneEye', w: 2 }, { enemy: 'cardSwarm', w: 2 }],
     boss: 'fruitGirl',
     introStory: 'office_intro',
+    preBossStory: 'pre_boss_office',
   },
   {
     id: 'exec', name: '上層 役員', bg: 'bgExecFloor', steps: 4,
     encounters: [{ enemy: 'overtimeWraith', w: 3 }, { enemy: 'auditEye', w: 2 }],
     boss: 'buddhaPig',
     introStory: 'exec_intro',
+    preBossStory: 'pre_boss_exec',
   },
   {
     // 屋上は直行（steps:0 で入場即ボス扉）。社長戦の選択肢/第2形態は Phase E。
@@ -286,5 +290,6 @@ export const FLOORS = [
     encounters: [],
     boss: 'president',
     introStory: 'rooftop_intro',
+    preBossStory: 'pre_boss_rooftop',
   },
 ];

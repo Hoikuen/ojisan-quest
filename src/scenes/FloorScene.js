@@ -176,14 +176,28 @@ export class FloorScene extends Phaser.Scene {
     const boss = isBossReady();
     this.run.pendingIsBoss = boss;
     this.run.pendingEnemy = boss ? this.floor.boss : pickEncounter();
-    // 移動演出：背景を左にパン＋キャラが右へ大きく歩く → フェードアウトで戦闘へ
+
+    const preBossKey = boss && this.floor.preBossStory;
+    const shownFlag = 'preBossShown_' + this.floor.id;
+    const showPreBoss = preBossKey && !this.run.flags[shownFlag];
+    if (showPreBoss) this.run.flags[shownFlag] = true;
+
     if (this.bgImage) {
       this.tweens.add({ targets: this.bgImage, x: -110, duration: 520, ease: 'Sine.easeIn' });
     }
     this.tweens.add({ targets: this.player, x: this.player.x + 200, duration: 520, ease: 'Sine.easeIn' });
     this.time.delayedCall(420, () => {
       this.cameras.main.fadeOut(280);
-      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('BattleScene', { returnTo: 'FloorScene' }));
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        if (showPreBoss) {
+          this.scene.start('DialogueScene', {
+            key: preBossKey, bg: this.floor.bg,
+            next: 'BattleScene', nextData: { returnTo: 'FloorScene' },
+          });
+        } else {
+          this.scene.start('BattleScene', { returnTo: 'FloorScene' });
+        }
+      });
     });
   }
 
