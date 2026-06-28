@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS, LAYOUT } from '../constants.js';
 import { RPG_ENEMIES, SKILLS } from '../data/content.js';
 import { getRun, startRun, currentFloor, grantExp, grantGold } from '../state/run.js';
+import { audio } from '../audio/AudioManager.js';
 
 // ───────────────────────────────────────────────────────────────
 // ターン制バトル。FloorScene が run.pendingEnemy に敵を入れて起動する。
@@ -35,6 +36,7 @@ export class BattleScene extends Phaser.Scene {
     this.buildMessageWindow();
     this.buildCommandWindow();
     this.setupKeys();
+    audio.playBGM('battle');
 
     this.runSequence(
       [{ text: this.enemy.flavorAppear ?? `${this.enemy.name}が あらわれた！`, delay: 1000 }],
@@ -274,6 +276,7 @@ export class BattleScene extends Phaser.Scene {
       if (this.menuOptions[i].enabled !== false) break;
     }
     this.menuIndex = i;
+    audio.playSE('cursor');
     this.updateCursor();
   }
 
@@ -281,6 +284,7 @@ export class BattleScene extends Phaser.Scene {
     if (!this.menuActive) return;
     const opt = this.menuOptions[this.menuIndex];
     if (!opt || opt.enabled === false) return;
+    audio.playSE('confirm');
     opt.onSelect();
   }
 
@@ -520,6 +524,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   flashHurt(target, sprite, isPlayer) {
+    audio.playSE('hit');
     const homeX = sprite._homeX ?? (isPlayer ? LAYOUT.playerX : LAYOUT.enemyX);
     const dir = isPlayer ? -1 : 1;
     sprite.x = homeX;
@@ -534,6 +539,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   flashHeal(sprite) {
+    audio.playSE('heal');
     const origTint = sprite._origTint ?? null;
     sprite.setTintFill(0x7CFF8A);
     this.time.delayedCall(150, () => { if (origTint) sprite.setTint(origTint); else sprite.clearTint(); });
@@ -557,6 +563,8 @@ export class BattleScene extends Phaser.Scene {
 
   win() {
     this.battleOver = true;
+    audio.stopBGM();
+    audio.playSE('victory');
     this.closeMenu();
     if (this._poseTimer) this._poseTimer.remove();
 
@@ -592,7 +600,7 @@ export class BattleScene extends Phaser.Scene {
     for (const up of levelUps) {
       steps.push({
         text: `${this.player.name}は レベル ${up.level} に あがった！`, delay: 1300,
-        fn: () => this.refreshPartyStatus(),
+        fn: () => { audio.playSE('levelUp'); this.refreshPartyStatus(); },
       });
       if (up.learned) {
         steps.push({ text: `とくぎ「${SKILLS[up.learned].name}」を おぼえた！`, delay: 1300 });
@@ -608,6 +616,8 @@ export class BattleScene extends Phaser.Scene {
 
   lose() {
     this.battleOver = true;
+    audio.stopBGM();
+    audio.playSE('gameOver');
     this.closeMenu();
 
     // 全滅演出

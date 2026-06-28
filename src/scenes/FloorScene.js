@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS, LAYOUT } from '../constants.js';
 import { getRun, currentFloor, isBossReady, hasNextFloor, pickEncounter, addCompanion } from '../state/run.js';
+import { audio } from '../audio/AudioManager.js';
 
 // 軽量な通路フロア。おじさんが右へ進み、エンカウントで戦闘へ／奥のボス扉で階ボス。
 // 進行：steps 回の通常エンカウントを越えるとボス扉が開く。階ボス撃破で次階 or 脱出。
@@ -63,6 +64,7 @@ export class FloorScene extends Phaser.Scene {
     // 軽い上下のアイドル
     this.tweens.add({ targets: this.player, y: 374, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
+    audio.playBGM('cafe');
     this.buildMenu(ready);
   }
 
@@ -166,14 +168,14 @@ export class FloorScene extends Phaser.Scene {
     this.updateCursor();
 
     const kb = this.input.keyboard;
-    kb.on('keydown-UP', () => { this.idx = (this.idx + this.options.length - 1) % this.options.length; this.updateCursor(); });
-    kb.on('keydown-DOWN', () => { this.idx = (this.idx + 1) % this.options.length; this.updateCursor(); });
+    kb.on('keydown-UP',    () => { this.idx = (this.idx + this.options.length - 1) % this.options.length; audio.playSE('cursor'); this.updateCursor(); });
+    kb.on('keydown-DOWN',  () => { this.idx = (this.idx + 1) % this.options.length; audio.playSE('cursor'); this.updateCursor(); });
     kb.on('keydown-ENTER', () => this.confirm());
     kb.on('keydown-SPACE', () => this.confirm());
   }
 
   updateCursor() { const t = this.items[this.idx]; if (t) this.cursor.setPosition(this.cursorX, t.y + 10); }
-  confirm() { if (this._busy) return; this.options[this.idx].onSelect(); }
+  confirm() { if (this._busy) return; audio.playSE('confirm'); this.options[this.idx].onSelect(); }
 
   // すすむ／ボスにいどむ
   advanceFloor() {

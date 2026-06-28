@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
 import { SHOP } from '../data/content.js';
 import { getRun, saveRun } from '../state/run.js';
+import { audio } from '../audio/AudioManager.js';
 
 // 拠点＝喫茶のりちゃん。初訪問は cafe_intro を再生→メニュー。
 // メニュー：はなす／ほじゅう（全回復）／セーブ／出発（戦闘へ）。
@@ -56,9 +57,11 @@ export class CafeScene extends Phaser.Scene {
     this.cursor = null;
     this.rebuildMenu(this.mainOptions);
 
+    audio.playBGM('cafe');
+
     const kb = this.input.keyboard;
-    kb.on('keydown-UP', () => { this.idx = (this.idx + this.options.length - 1) % this.options.length; this.updateCursor(); });
-    kb.on('keydown-DOWN', () => { this.idx = (this.idx + 1) % this.options.length; this.updateCursor(); });
+    kb.on('keydown-UP',    () => { this.idx = (this.idx + this.options.length - 1) % this.options.length; audio.playSE('cursor'); this.updateCursor(); });
+    kb.on('keydown-DOWN',  () => { this.idx = (this.idx + 1) % this.options.length; audio.playSE('cursor'); this.updateCursor(); });
     kb.on('keydown-ENTER', () => this.confirm());
     kb.on('keydown-SPACE', () => this.confirm());
   }
@@ -67,7 +70,7 @@ export class CafeScene extends Phaser.Scene {
     const t = this.items[this.idx];
     if (t && this.cursor) this.cursor.setPosition(this.cursorX, t.y + 10);
   }
-  confirm() { if (this._busy) return; this.options[this.idx]?.onSelect(); }
+  confirm() { if (this._busy) return; audio.playSE('confirm'); this.options[this.idx]?.onSelect(); }
 
   rebuildMenu(newOptions) {
     this.options = newOptions;

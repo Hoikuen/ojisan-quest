@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
 import { STORY } from '../data/story.js';
+import { audio } from '../audio/AudioManager.js';
 
 // 会話・カットシーンのデータ駆動ランナー。
 // 起動：this.scene.start('DialogueScene', { key, next, nextData?, bg? })
@@ -68,6 +69,7 @@ export class DialogueScene extends Phaser.Scene {
 
   advance() {
     if (this.done) return;
+    audio.playSE('cursor');
     this.index += 1;
     if (this.index < this.lines.length) {
       this.showLine();

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
 import { startRun, hasSave, loadRun } from '../state/run.js';
+import { audio } from '../audio/AudioManager.js';
 
 // タイトル：王道RPGの「はじめる」だけ。Enter/Space/クリックでランを開始して戦闘へ。
 export class TitleScene extends Phaser.Scene {
@@ -36,7 +37,7 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
 
     const refresh = () => this.menuTexts.forEach((t, i) => t.setColor(i === this.menuIdx ? '#ffe24a' : '#ffffff'));
-    const setIdx = (i) => { this.menuIdx = i; refresh(); };
+    const setIdx = (i) => { this.menuIdx = i; audio.playSE('cursor'); refresh(); };
     this.menuTexts.forEach((t, i) => {
       t.on('pointerover', () => setIdx(i));
       t.on('pointerdown', () => opts[this.menuIdx].act());
@@ -48,8 +49,8 @@ export class TitleScene extends Phaser.Scene {
       kb.on('keydown-UP', () => setIdx((this.menuIdx + opts.length - 1) % opts.length));
       kb.on('keydown-DOWN', () => setIdx((this.menuIdx + 1) % opts.length));
     }
-    kb.on('keydown-ENTER', () => opts[this.menuIdx].act());
-    kb.on('keydown-SPACE', () => opts[this.menuIdx].act());
+    kb.on('keydown-ENTER', () => { audio.playSE('confirm'); opts[this.menuIdx].act(); });
+    kb.on('keydown-SPACE', () => { audio.playSE('confirm'); opts[this.menuIdx].act(); });
 
     this.add.text(GAME_W / 2, GAME_H - 40, opts.length > 1 ? '↑↓ で選択・Enter で決定' : 'Enter / Space / クリック で開始', {
       fontFamily: 'monospace', fontSize: '15px', color: COLORS.textDim,

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../constants.js';
 import { getRun } from '../state/run.js';
+import { audio } from '../audio/AudioManager.js';
 
 export class ResultScene extends Phaser.Scene {
   constructor() { super('ResultScene'); }
@@ -16,6 +17,8 @@ export class ResultScene extends Phaser.Scene {
       this.add.image(0, 0, bgKey).setOrigin(0, 0).setDisplaySize(GAME_W, GAME_H);
       this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, win ? 0.45 : 0.35).setOrigin(0, 0);
     }
+
+    audio.stopBGM();
 
     if (win) {
       this.buildWinScreen(run);
