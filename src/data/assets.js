@@ -64,4 +64,12 @@ export const IMAGES = {
   // ── ボス：大仏豚（後半用・今は読み込みだけ）──────────────────
   enemyBossIdle: `${S}/enemy_boss/idle.png`,
   enemyBossHurt: `${S}/enemy_boss/hurt.png`,
+
+  // ── 仲間：後輩くん（男性・若手社員）──────────────────────────
+  kohaiIdle: `${S}/young_salaryman/idle.png`,
+  kohaiHurt: `${S}/young_salaryman/hurt.png`,
+
+  // ── 仲間：OL田中さん（女性・スーツ・メガネ）─────────────────
+  olIdle: `${S}/office_lady/idle.png`,
+  olHurt: `${S}/office_lady/hurt.png`,
 };
