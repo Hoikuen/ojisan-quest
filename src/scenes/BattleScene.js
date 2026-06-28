@@ -75,7 +75,7 @@ export class BattleScene extends Phaser.Scene {
            { x: 155, y: cMaxY,          scale: 0.85 }]
         : [{ x: 270, y: LAYOUT.playerY, scale: 1    },
            { x: 185, y: cMaxY,          scale: 0.82 },
-           { x: 110, y: cMaxY - 22,     scale: 0.82 }];
+           { x: 110, y: cMaxY - 22,     scale: 0.68 }];
 
     const TINT_COLORS = { kohai: 0xaaddff, ol: 0xffbbcc };
 
