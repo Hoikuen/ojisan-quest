@@ -222,10 +222,15 @@ export class FloorScene extends Phaser.Scene {
         this.run.stepInFloor = 0;
       }
       const nextF = currentFloor();
+      const npcMap = {
+        kohai: { key: 'kohaiIdle', fallback: 'playerIdle', tint: 0xaaddff },
+        ol:    { key: 'olIdle',    fallback: 'playerIdle', tint: 0xffbbcc },
+      };
       this.scene.start('DialogueScene', {
         key: joinKey + '_join',
         next: 'FloorScene',
         bg: nextF ? nextF.bg : this.floor.bg,
+        npc: npcMap[joinKey],
       });
       return;
     }

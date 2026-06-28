@@ -222,7 +222,7 @@ export const RPG_ENEMIES = {
 export const COMPANIONS = {
   kohai: {
     name: '後輩', key: 'kohai',
-    sprite: 'playerIdle', hurtSprite: 'playerHurt',
+    sprite: 'kohaiIdle', hurtSprite: 'kohaiHurt', // 発注済みスプライト到着後に差し替え（未着時は playerIdle にフォールバック）
     level: 1, exp: 0,
     hp: 26, maxHp: 26, mp: 6,  maxMp: 6,
     atk: 7, def: 4, spd: 8,
@@ -230,7 +230,7 @@ export const COMPANIONS = {
   },
   ol: {
     name: 'OL田中さん', key: 'ol',
-    sprite: 'playerIdle', hurtSprite: 'playerHurt',
+    sprite: 'olIdle', hurtSprite: 'olHurt', // 発注済みスプライト到着後に差し替え（未着時は playerIdle にフォールバック）
     level: 1, exp: 0,
     hp: 22, maxHp: 22, mp: 14, maxMp: 14,
     atk: 6, def: 4, spd: 9,

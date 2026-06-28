@@ -74,19 +74,17 @@ export class BattleScene extends Phaser.Scene {
 
     this.partySprites = this.party.map((m, i) => {
       const pos = positions[i];
-      const sprite = this.add.image(pos.x, pos.y, m.sprite || 'playerIdle').setOrigin(0.5, 1);
+      // 専用スプライトが未ロードなら playerIdle にフォールバック
+      const sprKey = (m.sprite && this.textures.exists(m.sprite)) ? m.sprite : 'playerIdle';
+      const sprite = this.add.image(pos.x, pos.y, sprKey).setOrigin(0.5, 1);
       this.scaleToHeight(sprite, LAYOUT.playerH * pos.scale);
       sprite._homeX = pos.x;
+      sprite._baseScale = sprite.scaleX; // ポーズ差替時にサイズを維持するために保存
 
-      // 仲間には名前タグ表示（プレースホルダー期間、どのスプライトか区別できるように）
       if (i > 0) {
-        const sprH = LAYOUT.playerH * pos.scale;
-        this.add.text(pos.x, pos.y - sprH - 4, m.name, {
-          fontFamily: 'sans-serif', fontSize: '11px', color: '#aaddff',
-          stroke: '#000000', strokeThickness: 3,
-        }).setOrigin(0.5, 1);
+        // 専用スプライトがない間は色で区別（専用スプライト到着後は tint 不要になる）
         const tint = TINT_COLORS[m.key];
-        if (tint) { sprite.setTint(tint); sprite._origTint = tint; }
+        if (tint && sprKey === 'playerIdle') { sprite.setTint(tint); sprite._origTint = tint; }
       }
 
       return sprite;
@@ -515,11 +513,11 @@ export class BattleScene extends Phaser.Scene {
     if (!key || !this.textures.exists(key)) return;
     if (this._poseTimer) this._poseTimer.remove();
     this.playerSprite.setTexture(key);
-    this.scaleToHeight(this.playerSprite, LAYOUT.playerH);
+    this.playerSprite.setScale(this.playerSprite._baseScale);
     this._poseTimer = this.time.delayedCall(ms, () => {
       if (this.battleOver) return;
       this.playerSprite.setTexture(this.player.sprite);
-      this.scaleToHeight(this.playerSprite, LAYOUT.playerH);
+      this.playerSprite.setScale(this.playerSprite._baseScale);
     });
   }
 
