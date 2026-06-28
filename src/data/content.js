@@ -223,7 +223,7 @@ export const RPG_ENEMIES = {
 // key フィールドはショップや join チェックの識別子として使う。
 export const COMPANIONS = {
   kohai: {
-    name: '鈴木くん', key: 'kohai',
+    name: '後輩鈴木くん', key: 'kohai',
     sprite: 'kohaiIdle', hurtSprite: 'kohaiHurt', // 発注済みスプライト到着後に差し替え（未着時は playerIdle にフォールバック）
     level: 1, exp: 0,
     hp: 26, maxHp: 26, mp: 6,  maxMp: 6,
