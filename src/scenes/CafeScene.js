@@ -167,7 +167,7 @@ export class CafeScene extends Phaser.Scene {
 
   flash(text) {
     this.msg.setText(text);
-    this.time.delayedCall(1500, () => { if (!this._busy) this.msg.setText('ママ：どうする？'); });
+    this.time.delayedCall(3000, () => { if (!this._busy) this.msg.setText('ママ：どうする？'); });
   }
 
   drawWindow(x, y, w, h) {

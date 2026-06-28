@@ -712,7 +712,7 @@ export class BattleScene extends Phaser.Scene {
       const step = steps[i++];
       if (step.fn) step.fn();
       this.setMessage(step.text);
-      this.time.delayedCall(step.delay ?? 850, next);
+      this.time.delayedCall(step.delay ?? 1400, next);
     };
     next();
   }
