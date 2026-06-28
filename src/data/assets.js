@@ -72,4 +72,7 @@ export const IMAGES = {
   // ── 仲間：OL田中さん（女性・スーツ・メガネ）─────────────────
   olIdle: `${S}/office_lady/idle.png`,
   olHurt: `${S}/office_lady/hurt.png`,
+
+  // ── フロア扉スプライト ────────────────────────────────────────
+  doorBoss: `${S}/door_boss/idle.png`,
 };

@@ -50,11 +50,23 @@ export class FloorScene extends Phaser.Scene {
     this.buildProgressBar(ready);
 
     // ボス扉（右端）。ボス到達可なら強調。
-    const doorColor = ready ? 0xffe24a : 0x555a72;
-    this.add.rectangle(720, 250, 76, 120, 0x0b0d1a, 0.85).setStrokeStyle(3, doorColor);
-    this.add.text(720, 250, ready ? 'ボス\n扉' : '扉', {
-      fontFamily: 'sans-serif', fontSize: '16px', color: ready ? '#ffe24a' : '#888ea8', align: 'center',
-    }).setOrigin(0.5);
+    // ボス扉スプライトがあれば使う。未達なら暗く表示、到達可なら金グロー。
+    if (this.textures.exists('doorBoss')) {
+      const door = this.add.image(720, 375, 'doorBoss').setOrigin(0.5, 1);
+      door.setScale(130 / door.height);
+      if (!ready) {
+        door.setTint(0x444466);
+      } else {
+        const glow = this.add.rectangle(720, 375, door.displayWidth + 14, 136, 0xffe24a, 0.18).setOrigin(0.5, 1);
+        this.tweens.add({ targets: glow, alpha: 0.04, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      }
+    } else {
+      const doorColor = ready ? 0xffe24a : 0x555a72;
+      this.add.rectangle(720, 250, 76, 120, 0x0b0d1a, 0.85).setStrokeStyle(3, doorColor);
+      this.add.text(720, 250, ready ? 'ボス\n扉' : '扉', {
+        fontFamily: 'sans-serif', fontSize: '16px', color: ready ? '#ffe24a' : '#888ea8', align: 'center',
+      }).setOrigin(0.5);
+    }
 
     // おじさん（進捗に応じて右へ寄る＝通路を進んでいる感じ）
     const t = f.steps > 0 ? Math.min(1, this.run.stepInFloor / f.steps) : 1;
