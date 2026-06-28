@@ -62,13 +62,20 @@ export class BattleScene extends Phaser.Scene {
   }
 
   buildSprites() {
-    // パーティ人数に応じた立ち位置（前列・後列ずらし）
+    // パーティ人数に応じた立ち位置。
+    // ステータス窓上端を計算し、仲間スプライト底辺がその 6px 上に収まるよう配置。
     const n = this.party.length;
+    const statWindowY = 440 - (38 * n + 8) - 4; // buildPartyStatusWindow と同じ式
+    const cMaxY = statWindowY - 6;               // 仲間スプライト bottom の上限
+
     const positions = n === 1
       ? [{ x: LAYOUT.playerX, y: LAYOUT.playerY, scale: 1 }]
       : n === 2
-        ? [{ x: 255, y: 370, scale: 1 }, { x: 155, y: 385, scale: 0.85 }]
-        : [{ x: 270, y: 365, scale: 1 }, { x: 185, y: 380, scale: 0.85 }, { x: 110, y: 390, scale: 0.72 }];
+        ? [{ x: 255, y: LAYOUT.playerY, scale: 1    },
+           { x: 155, y: cMaxY,          scale: 0.85 }]
+        : [{ x: 270, y: LAYOUT.playerY, scale: 1    },
+           { x: 185, y: cMaxY,          scale: 0.82 },
+           { x: 110, y: cMaxY - 22,     scale: 0.68 }];
 
     const TINT_COLORS = { kohai: 0xaaddff, ol: 0xffbbcc };
 
